@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSettings } from '../ui/useStorage';
 import { storage } from '../modules/storage';
 import { exportJSON, exportCSV } from '../modules/analytics';
+import { PROFILE_PRESETS } from '../modules/types';
 
 export function SettingsPanel() {
   const [settings, setSettings] = useSettings();
@@ -43,6 +44,30 @@ export function SettingsPanel() {
         <h1 className="text-2xl font-bold text-white">Settings</h1>
         <p className="text-sm text-slate-500">Tune Beacon to fit how you work.</p>
       </div>
+
+      {settings.userProfile && (
+        <section className="card space-y-2">
+          <h2 className="text-sm font-semibold text-slate-200">Your Profile</h2>
+          {(() => {
+            const p = PROFILE_PRESETS.find((x) => x.id === settings.userProfile);
+            return p ? (
+              <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-3.5 py-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{p.emoji}</span>
+                  <div>
+                    <div className="text-sm font-semibold text-white">{p.label}</div>
+                    <div className="text-xs text-slate-500">{p.tagline}</div>
+                  </div>
+                </div>
+                <span className="text-xs text-slate-500">
+                  Change in{' '}
+                  <span className="text-slate-400">Website Rules → Switch profile</span>
+                </span>
+              </div>
+            ) : null;
+          })()}
+        </section>
+      )}
 
       <section className="card space-y-4">
         <h2 className="text-sm font-semibold text-slate-200">Pomodoro</h2>

@@ -1,5 +1,5 @@
 import { storage } from '../modules/storage';
-import { DEFAULT_SETTINGS, DEFAULT_RULES } from '../modules/types';
+import { DEFAULT_SETTINGS } from '../modules/types';
 import type { Message } from '../modules/messaging';
 import {
   startSession,
@@ -19,9 +19,17 @@ import { hostFromUrl } from '../modules/website-rules';
 
 chrome.runtime.onInstalled.addListener(async (details) => {
   if (details.reason === 'install') {
+    // Fresh install: settings with userProfile=null triggers the onboarding wizard.
+    // Rules are empty — they'll be seeded when the user picks their profile.
     await storage.setSettings(DEFAULT_SETTINGS);
-    await storage.setRules(DEFAULT_RULES);
+    await storage.setRules([]);
     chrome.tabs.create({ url: chrome.runtime.getURL('src/dashboard/index.html') });
+  } else if (details.reason === 'update') {
+    // Existing users upgrading: silently assign 'general' so they skip onboarding.
+    const s = await storage.getSettings();
+    if (!s.userProfile) {
+      await storage.setSettings({ ...s, userProfile: 'general' });
+    }
   }
   // Re-arm the periodic tracker alarm and badge after updates/restarts.
   const session = await storage.getSession();

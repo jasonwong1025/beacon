@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRules, useSettings } from '../ui/useStorage';
 import { normalizePattern, hostFromUrl } from '../modules/website-rules';
-import { DEFAULT_RULES, type RuleCategory, type WebsiteRule } from '../modules/types';
+import {
+  PROFILE_PRESETS,
+  rulesForProfile,
+  type RuleCategory,
+  type UserProfile,
+  type WebsiteRule,
+} from '../modules/types';
 
 const CATEGORY_META: Record<
   RuleCategory,
@@ -66,6 +72,7 @@ export function RulesManager() {
   const [query, setQuery] = useState('');
   const [draftCategory, setDraftCategory] = useState<RuleCategory>('blocked');
   const [openHosts, setOpenHosts] = useState<string[]>([]);
+  const [showPresets, setShowPresets] = useState(false);
 
   // Pull domains from currently open tabs so suggestions reflect real usage.
   useEffect(() => {
@@ -107,9 +114,22 @@ export function RulesManager() {
     await setRules(rules.filter((r) => r.id !== id));
   };
 
-  const resetDefaults = async () => {
-    if (!confirm('Replace your current rules with Beacon’s defaults?')) return;
-    await setRules(DEFAULT_RULES.map((r) => ({ ...r, createdAt: Date.now() })));
+  const applyPreset = async (profile: UserProfile, mode: 'replace' | 'merge') => {
+    const presetRules = rulesForProfile(profile).map((r) => ({
+      ...r,
+      id: newId(),
+      createdAt: Date.now(),
+    }));
+    if (mode === 'replace') {
+      await setRules(presetRules);
+    } else {
+      // Merge: preset only fills in hosts not already in the list.
+      const existing = new Set(rules.map((r) => r.pattern));
+      const toAdd = presetRules.filter((r) => !existing.has(r.pattern));
+      await setRules([...rules, ...toAdd]);
+    }
+    if (settings) await setSettings({ ...settings, userProfile: profile });
+    setShowPresets(false);
   };
 
   const counts = useMemo(() => {
@@ -133,6 +153,8 @@ export function RulesManager() {
   const openSuggestions = openHosts.filter((h) => !existingPatterns.has(h)).slice(0, 10);
   const commonSuggestions = COMMON_DISTRACTIONS.filter((h) => !existingPatterns.has(h));
 
+  const activeProfile = settings?.userProfile;
+
   return (
     <div className="animate-fade-in space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -142,13 +164,33 @@ export function RulesManager() {
             Beacon guides rather than gatekeeps. Tune how each site behaves during a focus session.
           </p>
         </div>
-        <button
-          onClick={resetDefaults}
-          className="text-xs text-slate-500 transition hover:text-slate-300"
-        >
-          Reset to defaults
-        </button>
+        {activeProfile && (
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <span>
+              Profile:{' '}
+              <span className="font-medium text-slate-300">
+                {PROFILE_PRESETS.find((p) => p.id === activeProfile)?.emoji}{' '}
+                {PROFILE_PRESETS.find((p) => p.id === activeProfile)?.label}
+              </span>
+            </span>
+            <button
+              onClick={() => setShowPresets((v) => !v)}
+              className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 transition hover:bg-white/10"
+            >
+              {showPresets ? 'Cancel' : 'Switch profile'}
+            </button>
+          </div>
+        )}
       </div>
+
+      {/* Profile preset picker */}
+      {showPresets && (
+        <PresetPicker
+          currentProfile={activeProfile}
+          onApply={applyPreset}
+          onClose={() => setShowPresets(false)}
+        />
+      )}
 
       {settings && (
         <div className="card">
@@ -190,7 +232,7 @@ export function RulesManager() {
           {openSuggestions.length > 0 && (
             <Suggestions
               title="From your open tabs"
-              hint={`adds as “${CATEGORY_META[draftCategory].label}”`}
+              hint={`adds as "${CATEGORY_META[draftCategory].label}"`}
               hosts={openSuggestions}
               meta={CATEGORY_META[draftCategory]}
               onPick={(h) => upsert([h], draftCategory)}
@@ -199,7 +241,7 @@ export function RulesManager() {
           {commonSuggestions.length > 0 && (
             <Suggestions
               title="Common distractions"
-              hint={`adds as “${CATEGORY_META[draftCategory].label}”`}
+              hint={`adds as "${CATEGORY_META[draftCategory].label}"`}
               hosts={commonSuggestions}
               meta={CATEGORY_META[draftCategory]}
               onPick={(h) => upsert([h], draftCategory)}
@@ -257,6 +299,107 @@ export function RulesManager() {
     </div>
   );
 }
+
+// ---- Profile preset picker ----
+
+function PresetPicker({
+  currentProfile,
+  onApply,
+  onClose,
+}: {
+  currentProfile: UserProfile | null | undefined;
+  onApply: (profile: UserProfile, mode: 'replace' | 'merge') => void;
+  onClose: () => void;
+}) {
+  const [picked, setPicked] = useState<UserProfile | null>(null);
+  const preset = picked ? PROFILE_PRESETS.find((p) => p.id === picked) : null;
+
+  return (
+    <div className="card animate-fade-in space-y-4 border border-beacon-500/20">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-slate-200">Apply a profile preset</h2>
+        <button onClick={onClose} className="text-xs text-slate-500 hover:text-slate-300">✕ Cancel</button>
+      </div>
+
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {PROFILE_PRESETS.map((p) => {
+          const active = picked === p.id;
+          const isCurrent = currentProfile === p.id;
+          return (
+            <button
+              key={p.id}
+              onClick={() => setPicked(p.id)}
+              className={`flex items-start gap-3 rounded-xl border p-3.5 text-left transition ${
+                active
+                  ? 'border-beacon-500/60 bg-beacon-600/15'
+                  : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10'
+              }`}
+            >
+              <span className="mt-0.5 text-xl leading-none">{p.emoji}</span>
+              <span className="min-w-0">
+                <span className="flex items-center gap-1.5 text-sm font-semibold text-white">
+                  {p.label}
+                  {isCurrent && (
+                    <span className="rounded-full bg-beacon-600/30 px-1.5 py-0.5 text-[10px] font-medium text-beacon-300">
+                      current
+                    </span>
+                  )}
+                </span>
+                <span className="mt-0.5 block text-xs text-slate-500 leading-relaxed">{p.tagline}</span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {preset && (
+        <div className="animate-fade-in rounded-xl border border-white/10 bg-ink-900/60 p-4">
+          <p className="mb-3 text-xs text-slate-400">{preset.desc}</p>
+          <div className="mb-4 grid grid-cols-3 gap-3 text-xs">
+            <RulePreview label="Blocked" dot="bg-rose-500" color="text-rose-300" items={preset.blocked} />
+            <RulePreview label="Warning" dot="bg-distract" color="text-distract" items={preset.warning} />
+            <RulePreview label="Allowed" dot="bg-focus" color="text-focus" items={preset.allowed} />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              className="btn-primary"
+              onClick={() => onApply(preset.id, 'replace')}
+            >
+              Replace my rules with {preset.label}
+            </button>
+            <button
+              className="btn-ghost"
+              onClick={() => onApply(preset.id, 'merge')}
+            >
+              Merge — add missing sites only
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RulePreview({ label, dot, color, items }: { label: string; dot: string; color: string; items: string[] }) {
+  return (
+    <div>
+      <div className={`mb-1.5 font-semibold ${color}`}>{label}</div>
+      <ul className="space-y-0.5">
+        {items.slice(0, 5).map((s) => (
+          <li key={s} className="flex items-center gap-1.5 text-slate-500">
+            <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dot}`} />
+            {s}
+          </li>
+        ))}
+        {items.length > 5 && (
+          <li className="text-slate-600">+{items.length - 5} more</li>
+        )}
+      </ul>
+    </div>
+  );
+}
+
+// ---- Sub-components ----
 
 function AddBar({
   draftCategory,
@@ -440,7 +583,6 @@ function Avatar({ domain }: { domain: string }) {
     };
   }, [domain]);
 
-  // Reset the error state if the domain changes (row reuse).
   useEffect(() => setErrored(false), [domain]);
 
   if (!errored && src) {

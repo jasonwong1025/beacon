@@ -48,6 +48,8 @@ export interface Settings {
   /** Minutes of cumulative drift before Beacon nudges the user. */
   driftReminderMinutes: number;
   notificationsEnabled: boolean;
+  /** null = fresh install, onboarding not yet completed. */
+  userProfile: UserProfile | null;
 }
 
 export type SessionStatus = 'active' | 'paused' | 'break' | 'completed' | 'cancelled';
@@ -119,6 +121,140 @@ export interface StorageShape {
   /** Per-tab granted-continue domains, transient (kept in session storage). */
 }
 
+export type UserProfile =
+  | 'general'
+  | 'student'
+  | 'developer'
+  | 'professional'
+  | 'researcher'
+  | 'creator';
+
+export interface ProfilePreset {
+  id: UserProfile;
+  label: string;
+  emoji: string;
+  tagline: string;
+  desc: string;
+  blocked: string[];
+  warning: string[];
+  allowed: string[];
+}
+
+export const PROFILE_PRESETS: ProfilePreset[] = [
+  {
+    id: 'general',
+    label: 'General',
+    emoji: '🌐',
+    tagline: 'Everyday browsing, less distraction',
+    desc: 'A balanced starting point for anyone who wants to spend less time on social media and more time on what matters.',
+    blocked: ['tiktok.com', 'facebook.com', 'snapchat.com', '9gag.com', 'buzzfeed.com'],
+    warning: [
+      'instagram.com', 'youtube.com', 'reddit.com', 'twitter.com', 'x.com',
+      'netflix.com', 'twitch.tv', 'pinterest.com',
+    ],
+    allowed: ['wikipedia.org', 'google.com', 'maps.google.com', 'notion.so'],
+  },
+  {
+    id: 'student',
+    label: 'Student',
+    emoji: '📚',
+    tagline: 'Study sessions without the rabbit holes',
+    desc: 'Built for exam prep, research, and deep learning. Keeps learning platforms open and blocks the biggest time-sinks.',
+    blocked: [
+      'tiktok.com', 'facebook.com', 'snapchat.com', 'instagram.com',
+      'netflix.com', 'twitch.tv', '9gag.com',
+    ],
+    warning: ['youtube.com', 'reddit.com', 'twitter.com', 'x.com', 'pinterest.com', 'amazon.com'],
+    allowed: [
+      'khanacademy.org', 'coursera.org', 'udemy.com', 'edx.org',
+      'wikipedia.org', 'scholar.google.com', 'wolframalpha.com',
+      'duolingo.com', 'notion.so', 'google.com',
+    ],
+  },
+  {
+    id: 'developer',
+    label: 'Developer',
+    emoji: '💻',
+    tagline: 'Deep work for programmers',
+    desc: 'Keeps docs, repos, and references always open. Warns on feeds and trending — keeps tutorials accessible.',
+    blocked: [
+      'tiktok.com', 'facebook.com', 'snapchat.com', 'instagram.com', '9gag.com',
+    ],
+    warning: [
+      'youtube.com', 'reddit.com', 'twitter.com', 'x.com',
+      'twitch.tv', 'news.ycombinator.com',
+    ],
+    allowed: [
+      'github.com', 'stackoverflow.com', 'developer.mozilla.org',
+      'npmjs.com', 'devdocs.io', 'codepen.io', 'caniuse.com',
+      'docs.python.org', 'figma.com', 'google.com',
+    ],
+  },
+  {
+    id: 'professional',
+    label: 'Professional',
+    emoji: '💼',
+    tagline: 'Remote work without the noise',
+    desc: 'Designed for reports, project work, and admin tasks. Keeps your productivity tools always open.',
+    blocked: [
+      'tiktok.com', 'facebook.com', 'snapchat.com', 'instagram.com',
+      'netflix.com', 'twitch.tv', '9gag.com',
+    ],
+    warning: [
+      'youtube.com', 'reddit.com', 'twitter.com', 'x.com',
+      'pinterest.com', 'amazon.com',
+    ],
+    allowed: [
+      'linkedin.com', 'notion.so', 'docs.google.com', 'drive.google.com',
+      'zoom.us', 'slack.com', 'trello.com', 'asana.com', 'google.com',
+    ],
+  },
+  {
+    id: 'researcher',
+    label: 'Researcher',
+    emoji: '🔬',
+    tagline: 'Literature reviews without drift',
+    desc: 'Optimised for academic reading and data collection. Keeps scholarly sources open and social media out.',
+    blocked: [
+      'tiktok.com', 'facebook.com', 'snapchat.com', 'instagram.com',
+      'netflix.com', 'twitch.tv', '9gag.com',
+    ],
+    warning: ['youtube.com', 'reddit.com', 'twitter.com', 'x.com'],
+    allowed: [
+      'scholar.google.com', 'wikipedia.org', 'pubmed.ncbi.nlm.nih.gov',
+      'jstor.org', 'arxiv.org', 'researchgate.net', 'semanticscholar.org',
+      'google.com', 'notion.so', 'zotero.org',
+    ],
+  },
+  {
+    id: 'creator',
+    label: 'Creator',
+    emoji: '🎨',
+    tagline: 'Make more, scroll less',
+    desc: 'For designers, writers, and content creators. Keeps creative tools and references open, tames the feeds.',
+    blocked: ['tiktok.com', 'facebook.com', 'snapchat.com', 'netflix.com', '9gag.com'],
+    warning: [
+      'instagram.com', 'youtube.com', 'reddit.com', 'twitter.com',
+      'x.com', 'pinterest.com',
+    ],
+    allowed: [
+      'figma.com', 'dribbble.com', 'behance.net', 'canva.com',
+      'unsplash.com', 'fonts.google.com', 'coolors.co',
+      'adobe.com', 'notion.so', 'google.com',
+    ],
+  },
+];
+
+export function rulesForProfile(profile: UserProfile): WebsiteRule[] {
+  const preset = PROFILE_PRESETS.find((p) => p.id === profile);
+  if (!preset) return [];
+  return [
+    ...preset.blocked.map(seedRule('blocked')),
+    ...preset.warning.map(seedRule('warning')),
+    ...preset.allowed.map(seedRule('allowed')),
+  ];
+}
+
 export const STORAGE_KEYS = {
   settings: 'beacon.settings',
   rules: 'beacon.rules',
@@ -133,23 +269,11 @@ export const DEFAULT_SETTINGS: Settings = {
   smart: { youtube: true, reddit: true },
   driftReminderMinutes: 15,
   notificationsEnabled: true,
+  userProfile: null,
 };
 
-export const DEFAULT_RULES: WebsiteRule[] = [
-  // Blocked — high-distraction by default.
-  ...['instagram.com', 'tiktok.com', 'facebook.com', 'netflix.com'].map(
-    seedRule('blocked')
-  ),
-  // Warning — useful but easy to lose time on.
-  ...['youtube.com', 'reddit.com', 'twitter.com', 'x.com'].map(seedRule('warning')),
-  // Allowed — known-productive.
-  ...[
-    'github.com',
-    'stackoverflow.com',
-    'flutter.dev',
-    'developer.mozilla.org',
-  ].map(seedRule('allowed')),
-];
+/** Fallback used by "Reset to defaults" when no profile is stored. */
+export const DEFAULT_RULES: WebsiteRule[] = rulesForProfile('general');
 
 function seedRule(category: RuleCategory) {
   return (pattern: string, i: number): WebsiteRule => ({

@@ -4,7 +4,8 @@ import { Overview } from './Overview';
 import { RulesManager } from './RulesManager';
 import { Reports } from './Reports';
 import { SettingsPanel } from './SettingsPanel';
-import { useSession } from '../ui/useStorage';
+import { Onboarding } from './Onboarding';
+import { useSession, useSettings } from '../ui/useStorage';
 import { remainingMs, formatDuration } from '../modules/session-engine';
 import { useNow } from '../ui/useStorage';
 
@@ -19,6 +20,16 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
 
 export function Dashboard() {
   const [tab, setTab] = useState<Tab>('overview');
+  const [settings] = useSettings();
+
+  // Show onboarding for fresh installs (userProfile === null).
+  // settings is null while storage is loading — render nothing to avoid flicker.
+  if (!settings) return null;
+  if (settings.userProfile === null) {
+    // onComplete is a no-op: useSettings subscribes to storage, so when
+    // Onboarding writes userProfile the Dashboard rerenders automatically.
+    return <Onboarding onComplete={() => {}} />;
+  }
 
   return (
     <div className="min-h-screen bg-ink-950 text-slate-200">

@@ -33,6 +33,8 @@ export const storage = {
       ...s,
       pomodoro: { ...DEFAULT_SETTINGS.pomodoro, ...s.pomodoro },
       smart: { ...DEFAULT_SETTINGS.smart, ...s.smart },
+      // Preserve null explicitly; undefined (pre-profile-feature) → null
+      userProfile: s.userProfile ?? null,
     };
   },
   async setSettings(settings: Settings): Promise<void> {
