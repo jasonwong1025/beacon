@@ -14,11 +14,30 @@ A productivity-focused Chrome extension that helps you stay aligned with your go
 [![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3-38B2AC?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 
-[Features](#-features) · [Getting Started](#-getting-started) · [How It Works](#-how-it-works) · [Docs](#-documentation) · [Privacy](#-privacy)
+[Screenshots](#-screenshots) · [Features](#-features) · [Getting Started](#-getting-started) · [How It Works](#-how-it-works) · [Docs](#-documentation) · [Privacy](#-privacy)
 
 </div>
 
 > *The internet is not the enemy. Losing sight of your purpose is.*
+
+---
+
+## 📸 Screenshots
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <strong>Start a focus session</strong><br/>
+      <sub>Set a goal, pick a type & duration, and go.</sub><br/><br/>
+      <img src="docs/screenshots/popup-session-setup.png" width="360" alt="Beacon popup — session setup with goal, type, duration, and Pomodoro toggle" />
+    </td>
+    <td width="50%" align="center">
+      <strong>Website rules & Smart Modes</strong><br/>
+      <sub>Block, warn, or allow sites — taming rabbit holes on YouTube & Reddit.</sub><br/><br/>
+      <img src="docs/screenshots/website-rules.png" width="480" alt="Beacon dashboard — Website Rules with Smart YouTube, Smart Reddit, and site lists" />
+    </td>
+  </tr>
+</table>
 
 ---
 
