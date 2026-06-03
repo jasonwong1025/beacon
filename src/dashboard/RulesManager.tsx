@@ -415,12 +415,47 @@ function FilterChip({
   );
 }
 
+/** Local favicon URL via Chrome's `_favicon` API (no external request). */
+function faviconUrl(domain: string): string {
+  try {
+    const url = new URL(chrome.runtime.getURL('/_favicon/'));
+    url.searchParams.set('pageUrl', `https://${domain}`);
+    url.searchParams.set('size', '64');
+    return url.toString();
+  } catch {
+    return '';
+  }
+}
+
+/** Shows the site's favicon; falls back to a colored letter on load error. */
 function Avatar({ domain }: { domain: string }) {
-  const { hue, letter } = useMemo(() => {
+  const [errored, setErrored] = useState(false);
+  const { hue, letter, src } = useMemo(() => {
     let hash = 0;
     for (let i = 0; i < domain.length; i++) hash = (hash * 31 + domain.charCodeAt(i)) >>> 0;
-    return { hue: hash % 360, letter: (domain[0] ?? '?').toUpperCase() };
+    return {
+      hue: hash % 360,
+      letter: (domain[0] ?? '?').toUpperCase(),
+      src: faviconUrl(domain),
+    };
   }, [domain]);
+
+  // Reset the error state if the domain changes (row reuse).
+  useEffect(() => setErrored(false), [domain]);
+
+  if (!errored && src) {
+    return (
+      <img
+        src={src}
+        alt=""
+        width={28}
+        height={28}
+        loading="lazy"
+        onError={() => setErrored(true)}
+        className="h-7 w-7 shrink-0 rounded-md bg-white/5 object-contain p-0.5"
+      />
+    );
+  }
   return (
     <span
       className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-xs font-bold text-white/90"
