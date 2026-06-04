@@ -3,6 +3,7 @@ import { useSettings, useCustomPresets } from '../ui/useStorage';
 import { storage } from '../modules/storage';
 import { exportJSON, exportCSV } from '../modules/analytics';
 import { resolvePreset } from '../modules/types';
+import { GitHubIcon, GITHUB_REPO_URL } from '../ui/components';
 
 export function SettingsPanel() {
   const [settings, setSettings] = useSettings();
@@ -146,7 +147,16 @@ export function SettingsPanel() {
       </section>
 
       <p className="pb-6 text-center text-xs text-slate-600">
-        Beacon · Stay on course. Work with intention.
+        Beacon · Stay on course. Work with intention. ·{' '}
+        <a
+          href={GITHUB_REPO_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 text-slate-500 transition hover:text-beacon-300"
+        >
+          <GitHubIcon size={12} />
+          GitHub
+        </a>
       </p>
     </div>
   );

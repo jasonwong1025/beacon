@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Brand } from '../ui/components';
+import { Brand, GitHubIcon, GITHUB_REPO_URL } from '../ui/components';
 import { Overview } from './Overview';
 import { RulesManager } from './RulesManager';
 import { Reports } from './Reports';
@@ -53,6 +53,15 @@ export function Dashboard() {
             </button>
           ))}
           <SessionBadge />
+          <a
+            href={GITHUB_REPO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-xs text-slate-500 transition hover:bg-white/5 hover:text-slate-300"
+          >
+            <GitHubIcon size={14} />
+            GitHub
+          </a>
         </aside>
 
         <main className="min-w-0 flex-1">
@@ -77,6 +86,18 @@ export function Dashboard() {
           {tab === 'settings' && <SettingsPanel />}
         </main>
       </div>
+
+      <footer className="mx-auto max-w-5xl px-6 pb-8 pt-2 md:hidden">
+        <a
+          href={GITHUB_REPO_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-1.5 text-xs text-slate-600 transition hover:text-slate-400"
+        >
+          <GitHubIcon size={14} />
+          View on GitHub
+        </a>
+      </footer>
     </div>
   );
 }
