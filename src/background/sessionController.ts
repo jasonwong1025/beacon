@@ -9,7 +9,7 @@ import {
 import { hostMatches } from '../modules/website-rules';
 import { formatHm } from '../modules/session-engine';
 import type { FocusSession, SessionRecord } from '../modules/types';
-import { rulesForProfile, resolvePreset } from '../modules/types';
+import { resolvePreset, freshRulesForProfile } from '../modules/types';
 import { transient } from './transient';
 import { flushActive } from './tracker';
 import { notify } from './notify';
@@ -38,11 +38,7 @@ export async function startSession(input: NewSessionInput): Promise<void> {
         profileEmoji: input.profileEmoji ?? preset.emoji,
       };
     }
-    const presetRules = rulesForProfile(input.profileId, customPresets).map((r, i) => ({
-      ...r,
-      id: `r_${Date.now().toString(36)}_${i}`,
-      createdAt: Date.now(),
-    }));
+    const presetRules = freshRulesForProfile(input.profileId, customPresets);
     await storage.setRules(presetRules);
     const settings = await storage.getSettings();
     await storage.setSettings({ ...settings, userProfile: input.profileId });

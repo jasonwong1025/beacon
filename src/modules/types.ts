@@ -316,6 +316,19 @@ export function rulesForProfile(
   return rulesFromSiteLists(preset);
 }
 
+/** Build rule rows with fresh ids — used when applying or syncing a profile preset. */
+export function freshRulesForProfile(
+  profile: ProfileId,
+  customPresets: CustomProfilePreset[] = []
+): WebsiteRule[] {
+  const stamp = Date.now();
+  return rulesForProfile(profile, customPresets).map((r, i) => ({
+    ...r,
+    id: `r_${stamp.toString(36)}_${i}`,
+    createdAt: stamp,
+  }));
+}
+
 export function resolvePreset(
   profile: ProfileId,
   customPresets: CustomProfilePreset[] = []

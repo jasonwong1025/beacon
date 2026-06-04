@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState, type MouseEvent } from 'react';
-import { useRules, useSettings, useCustomPresets } from '../ui/useStorage';
+import { useRules, useSettings, useCustomPresets, useSession } from '../ui/useStorage';
+import { storage } from '../modules/storage';
 import { normalizePattern, hostFromUrl } from '../modules/website-rules';
 import { CustomPresetEditor } from './CustomPresetEditor';
 import {
   PROFILE_PRESETS,
   emptyCustomPreset,
   resolvePreset,
-  rulesForProfile,
+  freshRulesForProfile,
   type CustomProfilePreset,
   type ProfileId,
   type RuleCategory,
@@ -72,6 +73,7 @@ export function RulesManager() {
   const [rules, setRules] = useRules();
   const [settings, setSettings] = useSettings();
   const [customPresets, setCustomPresets] = useCustomPresets();
+  const session = useSession();
 
   const [filter, setFilter] = useState<Filter>('all');
   const [query, setQuery] = useState('');
@@ -125,11 +127,7 @@ export function RulesManager() {
   };
 
   const applyPreset = async (profile: ProfileId, mode: 'replace' | 'merge') => {
-    const presetRules = rulesForProfile(profile, customPresets).map((r) => ({
-      ...r,
-      id: newId(),
-      createdAt: Date.now(),
-    }));
+    const presetRules = freshRulesForProfile(profile, customPresets);
     if (mode === 'replace') {
       await setRules(presetRules);
     } else {
@@ -142,6 +140,31 @@ export function RulesManager() {
     setShowPresets(false);
   };
 
+  const isLivePreset = (profileId: ProfileId) =>
+    settings?.userProfile === profileId || session?.profileId === profileId;
+
+  const syncLivePreset = async (
+    profileId: ProfileId,
+    nextPresets: CustomProfilePreset[],
+    preset: CustomProfilePreset
+  ) => {
+    if (!isLivePreset(profileId)) return;
+    await setRules(freshRulesForProfile(profileId, nextPresets));
+    if (
+      session &&
+      session.profileId === profileId &&
+      (session.status === 'active' ||
+        session.status === 'paused' ||
+        session.status === 'break')
+    ) {
+      await storage.setSession({
+        ...session,
+        profileLabel: preset.label,
+        profileEmoji: preset.emoji,
+      });
+    }
+  };
+
   const saveCustomPreset = async (draft: CustomProfilePreset, isNew: boolean) => {
     const trimmed: CustomProfilePreset = {
       ...draft,
@@ -150,12 +173,12 @@ export function RulesManager() {
       tagline: draft.tagline.trim(),
       desc: draft.desc.trim(),
     };
-    if (isNew) {
-      await setCustomPresets([...customPresets, trimmed]);
-    } else {
-      await setCustomPresets(
-        customPresets.map((p) => (p.id === trimmed.id ? trimmed : p))
-      );
+    const nextPresets = isNew
+      ? [...customPresets, trimmed]
+      : customPresets.map((p) => (p.id === trimmed.id ? trimmed : p));
+    await setCustomPresets(nextPresets);
+    if (!isNew) {
+      await syncLivePreset(trimmed.id, nextPresets, trimmed);
     }
   };
 
