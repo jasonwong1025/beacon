@@ -9,7 +9,7 @@ import {
 import { hostMatches } from '../modules/website-rules';
 import { formatHm } from '../modules/session-engine';
 import type { FocusSession, SessionRecord } from '../modules/types';
-import { rulesForProfile } from '../modules/types';
+import { rulesForProfile, resolvePreset } from '../modules/types';
 import { transient } from './transient';
 import { flushActive } from './tracker';
 import { notify } from './notify';
@@ -26,8 +26,18 @@ function ensureTrackAlarm(): void {
 }
 
 export async function startSession(input: NewSessionInput): Promise<void> {
+  const customPresets = await storage.getCustomPresets();
+  let enriched = { ...input };
+
   if (input.profileId) {
-    const customPresets = await storage.getCustomPresets();
+    const preset = resolvePreset(input.profileId, customPresets);
+    if (preset) {
+      enriched = {
+        ...enriched,
+        profileLabel: input.profileLabel ?? preset.label,
+        profileEmoji: input.profileEmoji ?? preset.emoji,
+      };
+    }
     const presetRules = rulesForProfile(input.profileId, customPresets).map((r, i) => ({
       ...r,
       id: `r_${Date.now().toString(36)}_${i}`,
@@ -38,7 +48,7 @@ export async function startSession(input: NewSessionInput): Promise<void> {
     await storage.setSettings({ ...settings, userProfile: input.profileId });
   }
 
-  const session = createSession(input);
+  const session = createSession(enriched);
   await storage.setSession(session);
   await transient.clearAllGrants();
   await transient.setLastNudge(0);
@@ -181,6 +191,8 @@ async function buildRecord(session: FocusSession): Promise<SessionRecord> {
     goal: session.goal,
     type: session.type,
     profileId: session.profileId,
+    profileLabel: session.profileLabel,
+    profileEmoji: session.profileEmoji,
     durationMinutes: session.durationMinutes,
     startedAt: session.startedAt,
     endedAt: session.endedAt ?? Date.now(),

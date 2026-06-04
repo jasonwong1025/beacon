@@ -60,6 +60,9 @@ export interface FocusSession {
   type: SessionType;
   /** When set, display and rules come from this profile preset. */
   profileId?: ProfileId;
+  /** Snapshot of preset display at session start. */
+  profileLabel?: string;
+  profileEmoji?: string;
   /** Planned duration in minutes. */
   durationMinutes: number;
   status: SessionStatus;
@@ -105,6 +108,8 @@ export interface SessionRecord {
   goal: string;
   type: SessionType;
   profileId?: ProfileId;
+  profileLabel?: string;
+  profileEmoji?: string;
   durationMinutes: number;
   startedAt: number;
   endedAt: number;
@@ -331,16 +336,12 @@ export interface SessionTypeOption {
 export function buildSessionTypeOptions(
   customPresets: CustomProfilePreset[]
 ): SessionTypeOption[] {
-  const builtins: SessionTypeOption[] = SESSION_TYPES.filter((t) => t.value !== 'custom').map(
-    (t) => ({
-      id: t.value,
-      label: t.label,
-      emoji: t.emoji,
-    })
-  );
-  if (customPresets.length === 0) {
-    return [...builtins, { id: 'custom', label: 'Custom', emoji: '✨' }];
-  }
+  const builtins: SessionTypeOption[] = PROFILE_PRESETS.map((p) => ({
+    id: p.id,
+    label: p.label,
+    emoji: p.emoji,
+    profileId: p.id,
+  }));
   const customs: SessionTypeOption[] = customPresets.map((p) => ({
     id: p.id,
     label: p.label,
@@ -351,11 +352,21 @@ export function buildSessionTypeOptions(
 }
 
 export function sessionTypeDisplay(
-  session: { type: SessionType; profileId?: ProfileId },
-  customPresets: CustomProfilePreset[] = []
+  session: {
+    type: SessionType;
+    profileId?: ProfileId;
+    profileLabel?: string;
+    profileEmoji?: string;
+  },
+  customPresets: CustomProfilePreset[] = [],
+  activeProfileId?: ProfileId | null
 ): { emoji: string; label: string } {
-  if (session.profileId) {
-    const preset = resolvePreset(session.profileId, customPresets);
+  if (session.profileEmoji && session.profileLabel) {
+    return { emoji: session.profileEmoji, label: session.profileLabel };
+  }
+  const profileId = session.profileId ?? activeProfileId ?? undefined;
+  if (profileId) {
+    const preset = resolvePreset(profileId, customPresets);
     if (preset) return { emoji: preset.emoji, label: preset.label };
   }
   const builtin = SESSION_TYPES.find((t) => t.value === session.type);

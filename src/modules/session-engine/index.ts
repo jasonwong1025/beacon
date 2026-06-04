@@ -10,6 +10,8 @@ export interface NewSessionInput {
   type: SessionType;
   durationMinutes: number;
   profileId?: ProfileId;
+  profileLabel?: string;
+  profileEmoji?: string;
   pomodoro?: PomodoroConfig;
 }
 
@@ -28,6 +30,8 @@ export function createSession(input: NewSessionInput): FocusSession {
     goal: input.goal.trim(),
     type: input.type,
     profileId: input.profileId,
+    profileLabel: input.profileLabel,
+    profileEmoji: input.profileEmoji,
     durationMinutes: input.durationMinutes,
     status: 'active',
     startedAt: now,

@@ -13,7 +13,6 @@ import { sendMessage } from '../modules/messaging';
 import {
   buildSessionTypeOptions,
   sessionTypeDisplay,
-  type SessionType,
 } from '../modules/types';
 import {
   TIMER_PRESETS,
@@ -53,7 +52,7 @@ function SessionSetup() {
   const [settings] = useSettings();
   const [customPresets] = useCustomPresets();
   const [goal, setGoal] = useState('');
-  const [selectedId, setSelectedId] = useState('work');
+  const [selectedId, setSelectedId] = useState('general');
   const [duration, setDuration] = useState(50);
   const [customDuration, setCustomDuration] = useState('');
   const [pomodoro, setPomodoro] = useState(false);
@@ -65,27 +64,34 @@ function SessionSetup() {
   );
 
   useEffect(() => {
-    if (!settings?.userProfile) return;
-    const match = typeOptions.find((o) => o.id === settings.userProfile);
-    if (match) setSelectedId(match.id);
+    if (typeOptions.length === 0) return;
+    if (settings?.userProfile) {
+      const match = typeOptions.find((o) => o.id === settings.userProfile);
+      if (match) {
+        setSelectedId(match.id);
+        return;
+      }
+    }
+    setSelectedId((current) =>
+      typeOptions.some((o) => o.id === current) ? current : typeOptions[0].id
+    );
   }, [settings?.userProfile, typeOptions]);
 
   const selectedOption = typeOptions.find((o) => o.id === selectedId) ?? typeOptions[0];
 
   const start = async () => {
     const mins = customDuration ? Math.max(1, parseInt(customDuration, 10) || duration) : duration;
-    const profileId = selectedOption?.profileId;
-    const sessionType: SessionType = profileId
-      ? 'custom'
-      : (selectedId as SessionType);
+    const profileId = selectedOption?.profileId ?? selectedId;
 
     setStarting(true);
     await sendMessage({
       type: 'START_SESSION',
       payload: {
         goal,
-        type: sessionType,
+        type: 'custom',
         profileId,
+        profileLabel: selectedOption?.label,
+        profileEmoji: selectedOption?.emoji,
         durationMinutes: mins,
         pomodoro: pomodoro
           ? {
@@ -115,7 +121,7 @@ function SessionSetup() {
       </div>
 
       <div>
-        <span className="label">Session type</span>
+        <span className="label">Profile preset</span>
         <div className="max-h-[112px] overflow-y-auto rounded-xl border border-white/5 bg-white/[0.02] p-1.5">
           <div className="grid grid-cols-3 gap-2">
             {typeOptions.map((t) => (
@@ -191,6 +197,7 @@ function SessionSetup() {
 
 function ActiveSession() {
   const session = useSession();
+  const [settings] = useSettings();
   const [customPresets] = useCustomPresets();
   const now = useNow();
   if (!session) return null;
@@ -204,7 +211,7 @@ function ActiveSession() {
     ? 1 - remaining / ((session.pomodoro?.breakMinutes ?? 5) * 60_000)
     : Math.min(1, elapsed / totalMs);
 
-  const typeMeta = sessionTypeDisplay(session, customPresets);
+  const typeMeta = sessionTypeDisplay(session, customPresets, settings?.userProfile);
 
   return (
     <div className="animate-fade-in flex flex-col items-center">

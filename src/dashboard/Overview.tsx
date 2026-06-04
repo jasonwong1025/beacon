@@ -92,7 +92,7 @@ export function Overview() {
         ) : (
           <div className="divide-y divide-white/5">
             {recent.map((s) => {
-              const meta = sessionTypeDisplay(s, customPresets);
+              const meta = sessionTypeDisplay(s, customPresets, s.profileId);
               const total = s.focusSeconds + s.distractionSeconds;
               const ratio = total > 0 ? s.focusSeconds / total : 0;
               return (
