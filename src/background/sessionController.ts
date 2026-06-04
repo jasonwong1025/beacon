@@ -153,9 +153,11 @@ async function finalize(session: FocusSession): Promise<void> {
 }
 
 async function buildRecord(session: FocusSession): Promise<SessionRecord> {
-  const [events, rules] = await Promise.all([
+  const [events, rules, customPresets, settings] = await Promise.all([
     storage.getEvents(),
     storage.getRules(),
+    storage.getCustomPresets(),
+    storage.getSettings(),
   ]);
   const mine = events.filter((e) => e.sessionId === session.id);
 
@@ -182,13 +184,24 @@ async function buildRecord(session: FocusSession): Promise<SessionRecord> {
     }
   }
 
+  const profileId = session.profileId ?? settings.userProfile ?? undefined;
+  let profileLabel = session.profileLabel;
+  let profileEmoji = session.profileEmoji;
+  if (profileId) {
+    const preset = resolvePreset(profileId, customPresets);
+    if (preset) {
+      profileLabel = profileLabel ?? preset.label;
+      profileEmoji = profileEmoji ?? preset.emoji;
+    }
+  }
+
   return {
     id: session.id,
     goal: session.goal,
     type: session.type,
-    profileId: session.profileId,
-    profileLabel: session.profileLabel,
-    profileEmoji: session.profileEmoji,
+    profileId,
+    profileLabel,
+    profileEmoji,
     durationMinutes: session.durationMinutes,
     startedAt: session.startedAt,
     endedAt: session.endedAt ?? Date.now(),

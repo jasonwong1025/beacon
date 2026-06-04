@@ -374,14 +374,16 @@ export function sessionTypeDisplay(
   customPresets: CustomProfilePreset[] = [],
   activeProfileId?: ProfileId | null
 ): { emoji: string; label: string } {
-  if (session.profileEmoji && session.profileLabel) {
-    return { emoji: session.profileEmoji, label: session.profileLabel };
-  }
   const profileId = session.profileId ?? activeProfileId ?? undefined;
-  if (profileId) {
-    const preset = resolvePreset(profileId, customPresets);
-    if (preset) return { emoji: preset.emoji, label: preset.label };
+  const resolved = profileId ? resolvePreset(profileId, customPresets) : null;
+
+  if (resolved || session.profileLabel || session.profileEmoji) {
+    return {
+      emoji: session.profileEmoji ?? resolved?.emoji ?? '✨',
+      label: session.profileLabel ?? resolved?.label ?? 'Custom',
+    };
   }
+
   const builtin = SESSION_TYPES.find((t) => t.value === session.type);
   return { emoji: builtin?.emoji ?? '✨', label: builtin?.label ?? 'Custom' };
 }

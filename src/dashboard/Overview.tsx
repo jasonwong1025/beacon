@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { StatCard, Bar, EmptyState } from '../ui/components';
-import { useEvents, useHistory, useRules, useCustomPresets } from '../ui/useStorage';
+import { useEvents, useHistory, useRules, useCustomPresets, useSettings } from '../ui/useStorage';
 import { buildDayOverview } from '../modules/analytics';
 import { formatHm } from '../modules/session-engine';
 import { sessionTypeDisplay } from '../modules/types';
@@ -10,6 +10,7 @@ export function Overview() {
   const history = useHistory();
   const [rules] = useRules();
   const [customPresets] = useCustomPresets();
+  const [settings] = useSettings();
 
   const day = useMemo(
     () => buildDayOverview(Date.now(), events, history, rules),
@@ -92,17 +93,19 @@ export function Overview() {
         ) : (
           <div className="divide-y divide-white/5">
             {recent.map((s) => {
-              const meta = sessionTypeDisplay(s, customPresets, s.profileId);
+              const meta = sessionTypeDisplay(s, customPresets, s.profileId ?? settings?.userProfile);
               const total = s.focusSeconds + s.distractionSeconds;
               const ratio = total > 0 ? s.focusSeconds / total : 0;
+              const goal = s.goal?.trim();
               return (
                 <div key={s.id} className="flex items-center gap-3 py-2.5">
-                  <span className="text-lg">{meta.emoji}</span>
+                  <span className="text-lg leading-none">{meta.emoji}</span>
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-medium text-slate-200">
-                      {s.goal || meta.label}
+                      {goal || meta.label}
                     </div>
-                    <div className="text-xs text-slate-500">
+                    <div className="truncate text-xs text-slate-500">
+                      {goal ? `${meta.label} · ` : ''}
                       {new Date(s.endedAt).toLocaleString(undefined, {
                         month: 'short',
                         day: 'numeric',
