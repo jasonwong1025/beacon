@@ -1,5 +1,7 @@
 <div align="center">
 
+**Language / 语言:** **English** · [简体中文](README.zh-CN.md)
+
 # 🔦 Beacon
 
 **Stay on course. Work with intention.**
@@ -62,7 +64,7 @@ Everything runs **locally in your browser** — no account, no cloud, no trackin
 |---|---|
 | 🎯 **Focus sessions** | Set a goal, session type, and duration |
 | ⏱️ **Flexible timers** | 25 / 50 / 60 / 90 / 120 min presets, custom durations, and **Pomodoro** mode |
-| 💼 **Session types** | Work · Study · Coding · Research · Reading · Custom |
+| 📋 **Profile presets** | Built-in presets (General, Student, Developer, …) plus **custom presets** (icon, title, site lists) |
 
 ### Website rules & smart modes
 
