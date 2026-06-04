@@ -40,6 +40,19 @@ export interface PomodoroConfig {
   breakMinutes: number;
 }
 
+/** Conscious micro-frictions on the warning / intent-check page. */
+export interface WarnFrictionConfig {
+  /** Seconds before "Continue" unlocks. 0 = no countdown. */
+  countdownSeconds: number;
+  /** Require typing an exact phrase before continuing. */
+  phraseConfirm: boolean;
+  /** Phrase the user must type when phraseConfirm is on. */
+  confirmPhrase: string;
+}
+
+export const DEFAULT_WARN_CONFIRM_PHRASE =
+  'I want to open this distracting site intentionally';
+
 export interface Settings {
   pomodoro: PomodoroConfig;
   /** Show an intent-check prompt on warning sites instead of a plain warning. */
@@ -48,6 +61,7 @@ export interface Settings {
   /** Minutes of cumulative drift before Beacon nudges the user. */
   driftReminderMinutes: number;
   notificationsEnabled: boolean;
+  warnFriction: WarnFrictionConfig;
   /** null = fresh install, onboarding not yet completed. */
   userProfile: ProfileId | null;
 }
@@ -403,6 +417,11 @@ export const DEFAULT_SETTINGS: Settings = {
   smart: { youtube: true, reddit: true },
   driftReminderMinutes: 15,
   notificationsEnabled: true,
+  warnFriction: {
+    countdownSeconds: 10,
+    phraseConfirm: false,
+    confirmPhrase: DEFAULT_WARN_CONFIRM_PHRASE,
+  },
   userProfile: null,
 };
 

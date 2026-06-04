@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useSettings, useCustomPresets } from '../ui/useStorage';
 import { storage } from '../modules/storage';
 import { exportJSON, exportCSV } from '../modules/analytics';
-import { resolvePreset } from '../modules/types';
+import { resolvePreset, DEFAULT_WARN_CONFIRM_PHRASE } from '../modules/types';
 import { GitHubIcon, GITHUB_REPO_URL } from '../ui/components';
 
 export function SettingsPanel() {
@@ -121,6 +121,49 @@ export function SettingsPanel() {
           min={1}
           onChange={(v) => setSettings({ ...settings, driftReminderMinutes: v })}
         />
+        <NumberField
+          label="Warning page wait (seconds)"
+          hint="Countdown before Continue unlocks on warning sites. Set 0 to disable."
+          value={settings.warnFriction.countdownSeconds}
+          min={0}
+          max={120}
+          onChange={(v) =>
+            setSettings({
+              ...settings,
+              warnFriction: { ...settings.warnFriction, countdownSeconds: v },
+            })
+          }
+        />
+        <Toggle
+          label="Require confirmation phrase"
+          hint="User must type an exact phrase before continuing past a warning."
+          checked={settings.warnFriction.phraseConfirm}
+          onChange={(v) =>
+            setSettings({
+              ...settings,
+              warnFriction: { ...settings.warnFriction, phraseConfirm: v },
+            })
+          }
+        />
+        {settings.warnFriction.phraseConfirm && (
+          <label className="block">
+            <span className="label">Confirmation phrase</span>
+            <input
+              className="input text-sm"
+              value={settings.warnFriction.confirmPhrase}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  warnFriction: {
+                    ...settings.warnFriction,
+                    confirmPhrase: e.target.value || DEFAULT_WARN_CONFIRM_PHRASE,
+                  },
+                })
+              }
+              placeholder={DEFAULT_WARN_CONFIRM_PHRASE}
+            />
+          </label>
+        )}
       </section>
 
       <section className="card space-y-3">
@@ -191,23 +234,34 @@ function Toggle({
 
 function NumberField({
   label,
+  hint,
   value,
   min,
+  max,
   onChange,
 }: {
   label: string;
+  hint?: string;
   value: number;
   min: number;
+  max?: number;
   onChange: (v: number) => void;
 }) {
+  const clamp = (n: number) => {
+    let v = Math.max(min, n);
+    if (max != null) v = Math.min(max, v);
+    return v;
+  };
   return (
     <label className="block">
       <span className="label">{label}</span>
+      {hint && <span className="mb-1.5 block text-xs text-slate-500">{hint}</span>}
       <input
         type="number"
         min={min}
+        max={max}
         value={value}
-        onChange={(e) => onChange(Math.max(min, parseInt(e.target.value, 10) || min))}
+        onChange={(e) => onChange(clamp(parseInt(e.target.value, 10) || min))}
         className="input"
       />
     </label>

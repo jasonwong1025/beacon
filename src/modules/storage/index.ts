@@ -34,6 +34,7 @@ export const storage = {
       ...s,
       pomodoro: { ...DEFAULT_SETTINGS.pomodoro, ...s.pomodoro },
       smart: { ...DEFAULT_SETTINGS.smart, ...s.smart },
+      warnFriction: { ...DEFAULT_SETTINGS.warnFriction, ...s.warnFriction },
       // Preserve null explicitly; undefined (pre-profile-feature) → null
       userProfile: s.userProfile ?? null,
     };
