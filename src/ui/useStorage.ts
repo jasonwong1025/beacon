@@ -3,6 +3,7 @@ import { storage, onStorageChanged, STORAGE_KEYS } from '../modules/storage';
 import type {
   Settings,
   WebsiteRule,
+  CustomProfilePreset,
   FocusSession,
   BeaconEvent,
   SessionRecord,
@@ -47,6 +48,24 @@ export function useRules(): [WebsiteRule[], (r: WebsiteRule[]) => Promise<void>]
     setRules(r);
   }, []);
   return [rules, update];
+}
+
+export function useCustomPresets(): [
+  CustomProfilePreset[],
+  (presets: CustomProfilePreset[]) => Promise<void>,
+] {
+  const [presets, setPresets] = useState<CustomProfilePreset[]>([]);
+  useEffect(() => {
+    storage.getCustomPresets().then(setPresets);
+    return onStorageChanged([STORAGE_KEYS.customPresets], () => {
+      storage.getCustomPresets().then(setPresets);
+    });
+  }, []);
+  const update = useCallback(async (p: CustomProfilePreset[]) => {
+    await storage.setCustomPresets(p);
+    setPresets(p);
+  }, []);
+  return [presets, update];
 }
 
 export function useEvents(): BeaconEvent[] {

@@ -1,14 +1,15 @@
 import { useMemo } from 'react';
 import { StatCard, Bar, EmptyState } from '../ui/components';
-import { useEvents, useHistory, useRules } from '../ui/useStorage';
+import { useEvents, useHistory, useRules, useCustomPresets } from '../ui/useStorage';
 import { buildDayOverview } from '../modules/analytics';
 import { formatHm } from '../modules/session-engine';
-import { SESSION_TYPES } from '../modules/types';
+import { sessionTypeDisplay } from '../modules/types';
 
 export function Overview() {
   const events = useEvents();
   const history = useHistory();
   const [rules] = useRules();
+  const [customPresets] = useCustomPresets();
 
   const day = useMemo(
     () => buildDayOverview(Date.now(), events, history, rules),
@@ -91,15 +92,15 @@ export function Overview() {
         ) : (
           <div className="divide-y divide-white/5">
             {recent.map((s) => {
-              const meta = SESSION_TYPES.find((t) => t.value === s.type);
+              const meta = sessionTypeDisplay(s, customPresets);
               const total = s.focusSeconds + s.distractionSeconds;
               const ratio = total > 0 ? s.focusSeconds / total : 0;
               return (
                 <div key={s.id} className="flex items-center gap-3 py-2.5">
-                  <span className="text-lg">{meta?.emoji}</span>
+                  <span className="text-lg">{meta.emoji}</span>
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-medium text-slate-200">
-                      {s.goal || meta?.label}
+                      {s.goal || meta.label}
                     </div>
                     <div className="text-xs text-slate-500">
                       {new Date(s.endedAt).toLocaleString(undefined, {

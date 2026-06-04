@@ -1,6 +1,7 @@
 import type {
   FocusSession,
   SessionType,
+  ProfileId,
   PomodoroConfig,
 } from '../types';
 
@@ -8,6 +9,7 @@ export interface NewSessionInput {
   goal: string;
   type: SessionType;
   durationMinutes: number;
+  profileId?: ProfileId;
   pomodoro?: PomodoroConfig;
 }
 
@@ -25,6 +27,7 @@ export function createSession(input: NewSessionInput): FocusSession {
     id: uid(),
     goal: input.goal.trim(),
     type: input.type,
+    profileId: input.profileId,
     durationMinutes: input.durationMinutes,
     status: 'active',
     startedAt: now,

@@ -1,11 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useRules, useSettings } from '../ui/useStorage';
+import { useEffect, useMemo, useState, type MouseEvent } from 'react';
+import { useRules, useSettings, useCustomPresets } from '../ui/useStorage';
 import { normalizePattern, hostFromUrl } from '../modules/website-rules';
+import { CustomPresetEditor } from './CustomPresetEditor';
 import {
   PROFILE_PRESETS,
+  emptyCustomPreset,
+  resolvePreset,
   rulesForProfile,
+  type CustomProfilePreset,
+  type ProfileId,
   type RuleCategory,
-  type UserProfile,
   type WebsiteRule,
 } from '../modules/types';
 
@@ -67,12 +71,18 @@ const newId = () =>
 export function RulesManager() {
   const [rules, setRules] = useRules();
   const [settings, setSettings] = useSettings();
+  const [customPresets, setCustomPresets] = useCustomPresets();
 
   const [filter, setFilter] = useState<Filter>('all');
   const [query, setQuery] = useState('');
   const [draftCategory, setDraftCategory] = useState<RuleCategory>('blocked');
   const [openHosts, setOpenHosts] = useState<string[]>([]);
   const [showPresets, setShowPresets] = useState(false);
+  const [showCustomEditor, setShowCustomEditor] = useState(false);
+  const [customEditorDraft, setCustomEditorDraft] = useState<CustomProfilePreset>(() =>
+    emptyCustomPreset()
+  );
+  const [editingCustomId, setEditingCustomId] = useState<string | null>(null);
 
   // Pull domains from currently open tabs so suggestions reflect real usage.
   useEffect(() => {
@@ -114,8 +124,8 @@ export function RulesManager() {
     await setRules(rules.filter((r) => r.id !== id));
   };
 
-  const applyPreset = async (profile: UserProfile, mode: 'replace' | 'merge') => {
-    const presetRules = rulesForProfile(profile).map((r) => ({
+  const applyPreset = async (profile: ProfileId, mode: 'replace' | 'merge') => {
+    const presetRules = rulesForProfile(profile, customPresets).map((r) => ({
       ...r,
       id: newId(),
       createdAt: Date.now(),
@@ -130,6 +140,57 @@ export function RulesManager() {
     }
     if (settings) await setSettings({ ...settings, userProfile: profile });
     setShowPresets(false);
+  };
+
+  const saveCustomPreset = async (draft: CustomProfilePreset, isNew: boolean) => {
+    const trimmed: CustomProfilePreset = {
+      ...draft,
+      label: draft.label.trim(),
+      emoji: draft.emoji.trim() || '✨',
+      tagline: draft.tagline.trim(),
+      desc: draft.desc.trim(),
+    };
+    if (isNew) {
+      await setCustomPresets([...customPresets, trimmed]);
+    } else {
+      await setCustomPresets(
+        customPresets.map((p) => (p.id === trimmed.id ? trimmed : p))
+      );
+    }
+  };
+
+  const deleteCustomPreset = async (id: string) => {
+    if (!confirm('Delete this custom preset? This cannot be undone.')) return;
+    await setCustomPresets(customPresets.filter((p) => p.id !== id));
+    if (settings?.userProfile === id) {
+      await setSettings({ ...settings, userProfile: null });
+    }
+    if (editingCustomId === id) {
+      setShowCustomEditor(false);
+      setEditingCustomId(null);
+    }
+  };
+
+  const openCreateCustom = () => {
+    setCustomEditorDraft(emptyCustomPreset());
+    setEditingCustomId(null);
+    setShowCustomEditor(true);
+    setShowPresets(false);
+  };
+
+  const openEditCustom = (preset: CustomProfilePreset) => {
+    setCustomEditorDraft({ ...preset });
+    setEditingCustomId(preset.id);
+    setShowCustomEditor(true);
+    setShowPresets(false);
+  };
+
+  const saveCustomEditor = async () => {
+    const isNew = editingCustomId === null;
+    await saveCustomPreset(customEditorDraft, isNew);
+    setShowCustomEditor(false);
+    setEditingCustomId(null);
+    setCustomEditorDraft(emptyCustomPreset());
   };
 
   const counts = useMemo(() => {
@@ -154,6 +215,9 @@ export function RulesManager() {
   const commonSuggestions = COMMON_DISTRACTIONS.filter((h) => !existingPatterns.has(h));
 
   const activeProfile = settings?.userProfile;
+  const activePresetMeta = activeProfile
+    ? resolvePreset(activeProfile, customPresets)
+    : null;
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -164,30 +228,114 @@ export function RulesManager() {
             Beacon guides rather than gatekeeps. Tune how each site behaves during a focus session.
           </p>
         </div>
-        {activeProfile && (
-          <div className="flex items-center gap-2 text-xs text-slate-500">
-            <span>
+        <div className="flex flex-wrap items-center gap-2">
+          {activePresetMeta && (
+            <span className="text-xs text-slate-500">
               Profile:{' '}
               <span className="font-medium text-slate-300">
-                {PROFILE_PRESETS.find((p) => p.id === activeProfile)?.emoji}{' '}
-                {PROFILE_PRESETS.find((p) => p.id === activeProfile)?.label}
+                {activePresetMeta.emoji} {activePresetMeta.label}
               </span>
             </span>
+          )}
+          <button
+            onClick={() => {
+              setShowCustomEditor(false);
+              setShowPresets((v) => !v);
+            }}
+            className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-slate-400 transition hover:bg-white/10 hover:text-slate-200"
+          >
+            {showPresets ? 'Cancel' : 'Switch profile'}
+          </button>
+          <button
+            onClick={openCreateCustom}
+            className="rounded-lg border border-beacon-500/40 bg-beacon-600/15 px-2.5 py-1 text-xs font-medium text-beacon-200 transition hover:bg-beacon-600/25"
+          >
+            + Create custom preset
+          </button>
+        </div>
+      </div>
+
+      {showCustomEditor && (
+        <div className="card animate-fade-in border border-beacon-500/20">
+          <CustomPresetEditor
+            draft={customEditorDraft}
+            isNew={editingCustomId === null}
+            onChange={setCustomEditorDraft}
+            onSave={saveCustomEditor}
+            onCancel={() => {
+              setShowCustomEditor(false);
+              setEditingCustomId(null);
+              setCustomEditorDraft(emptyCustomPreset());
+            }}
+          />
+        </div>
+      )}
+
+      {customPresets.length > 0 && !showCustomEditor && (
+        <div className="card space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-200">Your custom presets</h2>
+              <p className="text-xs text-slate-500">
+                Saved presets you can apply or edit anytime.
+              </p>
+            </div>
             <button
-              onClick={() => setShowPresets((v) => !v)}
-              className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 transition hover:bg-white/10"
+              onClick={openCreateCustom}
+              className="text-xs text-beacon-300 hover:text-beacon-200"
             >
-              {showPresets ? 'Cancel' : 'Switch profile'}
+              + New preset
             </button>
           </div>
-        )}
-      </div>
+          <div className="flex flex-wrap gap-2">
+            {customPresets.map((p) => (
+              <div
+                key={p.id}
+                className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2"
+              >
+                <span className="text-lg leading-none">{p.emoji}</span>
+                <span className="text-sm font-medium text-slate-200">{p.label}</span>
+                {activeProfile === p.id && (
+                  <span className="rounded-full bg-beacon-600/30 px-1.5 py-0.5 text-[10px] text-beacon-300">
+                    active
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => void applyPreset(p.id, 'replace')}
+                  className="ml-1 text-[11px] text-slate-500 hover:text-beacon-300"
+                >
+                  Apply
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openEditCustom(p)}
+                  className="text-[11px] text-slate-500 hover:text-slate-300"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void deleteCustomPreset(p.id)}
+                  className="text-[11px] text-slate-500 hover:text-rose-400"
+                >
+                  Delete
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Profile preset picker */}
       {showPresets && (
         <PresetPicker
           currentProfile={activeProfile}
+          customPresets={customPresets}
           onApply={applyPreset}
+          onDeleteCustom={deleteCustomPreset}
+          onEditCustom={openEditCustom}
+          onCreateCustom={openCreateCustom}
           onClose={() => setShowPresets(false)}
         />
       )}
@@ -304,78 +452,189 @@ export function RulesManager() {
 
 function PresetPicker({
   currentProfile,
+  customPresets,
   onApply,
+  onDeleteCustom,
+  onEditCustom,
+  onCreateCustom,
   onClose,
 }: {
-  currentProfile: UserProfile | null | undefined;
-  onApply: (profile: UserProfile, mode: 'replace' | 'merge') => void;
+  currentProfile: ProfileId | null | undefined;
+  customPresets: CustomProfilePreset[];
+  onApply: (profile: ProfileId, mode: 'replace' | 'merge') => void;
+  onDeleteCustom: (id: string) => Promise<void>;
+  onEditCustom: (preset: CustomProfilePreset) => void;
+  onCreateCustom: () => void;
   onClose: () => void;
 }) {
-  const [picked, setPicked] = useState<UserProfile | null>(null);
-  const preset = picked ? PROFILE_PRESETS.find((p) => p.id === picked) : null;
+  const [picked, setPicked] = useState<ProfileId | null>(null);
+
+  const preset = picked ? resolvePreset(picked, customPresets) : null;
+  const pickedCustom = picked ? customPresets.find((p) => p.id === picked) : null;
 
   return (
     <div className="card animate-fade-in space-y-4 border border-beacon-500/20">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-sm font-semibold text-slate-200">Apply a profile preset</h2>
-        <button onClick={onClose} className="text-xs text-slate-500 hover:text-slate-300">✕ Cancel</button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onCreateCustom}
+            className="rounded-lg border border-beacon-500/40 bg-beacon-600/15 px-2.5 py-1 text-xs font-medium text-beacon-200 transition hover:bg-beacon-600/25"
+          >
+            + Create custom preset
+          </button>
+          <button onClick={onClose} className="text-xs text-slate-500 hover:text-slate-300">
+            ✕ Cancel
+          </button>
+        </div>
       </div>
 
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {PROFILE_PRESETS.map((p) => {
-          const active = picked === p.id;
-          const isCurrent = currentProfile === p.id;
-          return (
-            <button
-              key={p.id}
-              onClick={() => setPicked(p.id)}
-              className={`flex items-start gap-3 rounded-xl border p-3.5 text-left transition ${
-                active
-                  ? 'border-beacon-500/60 bg-beacon-600/15'
-                  : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10'
-              }`}
-            >
-              <span className="mt-0.5 text-xl leading-none">{p.emoji}</span>
-              <span className="min-w-0">
-                <span className="flex items-center gap-1.5 text-sm font-semibold text-white">
-                  {p.label}
-                  {isCurrent && (
-                    <span className="rounded-full bg-beacon-600/30 px-1.5 py-0.5 text-[10px] font-medium text-beacon-300">
-                      current
-                    </span>
-                  )}
-                </span>
-                <span className="mt-0.5 block text-xs text-slate-500 leading-relaxed">{p.tagline}</span>
-              </span>
-            </button>
-          );
-        })}
+        {PROFILE_PRESETS.map((p) => (
+          <PresetCard
+            key={p.id}
+            emoji={p.emoji}
+            label={p.label}
+            tagline={p.tagline}
+            active={picked === p.id}
+            isCurrent={currentProfile === p.id}
+            onClick={() => setPicked(p.id)}
+          />
+        ))}
+        {customPresets.map((p) => (
+          <PresetCard
+            key={p.id}
+            emoji={p.emoji}
+            label={p.label}
+            tagline={p.tagline || 'Custom preset'}
+            active={picked === p.id}
+            isCurrent={currentProfile === p.id}
+            isCustom
+            onClick={() => setPicked(p.id)}
+            onEdit={(e) => {
+              e.stopPropagation();
+              onEditCustom(p);
+            }}
+            onDelete={(e) => {
+              e.stopPropagation();
+              void onDeleteCustom(p.id);
+            }}
+          />
+        ))}
       </div>
 
       {preset && (
         <div className="animate-fade-in rounded-xl border border-white/10 bg-ink-900/60 p-4">
-          <p className="mb-3 text-xs text-slate-400">{preset.desc}</p>
+          <p className="mb-3 text-xs text-slate-400">
+            {preset.desc || 'No description.'}
+          </p>
           <div className="mb-4 grid grid-cols-3 gap-3 text-xs">
             <RulePreview label="Blocked" dot="bg-rose-500" color="text-rose-300" items={preset.blocked} />
             <RulePreview label="Warning" dot="bg-distract" color="text-distract" items={preset.warning} />
             <RulePreview label="Allowed" dot="bg-focus" color="text-focus" items={preset.allowed} />
           </div>
+          {preset.blocked.length + preset.warning.length + preset.allowed.length === 0 && (
+            <p className="mb-4 text-xs text-slate-600">
+              This preset has no sites yet — applying it will clear your rules (replace) or add nothing (merge).
+            </p>
+          )}
           <div className="flex flex-wrap gap-2">
-            <button
-              className="btn-primary"
-              onClick={() => onApply(preset.id, 'replace')}
-            >
+            <button className="btn-primary" onClick={() => onApply(preset.id, 'replace')}>
               Replace my rules with {preset.label}
             </button>
-            <button
-              className="btn-ghost"
-              onClick={() => onApply(preset.id, 'merge')}
-            >
+            <button className="btn-ghost" onClick={() => onApply(preset.id, 'merge')}>
               Merge — add missing sites only
             </button>
+            {pickedCustom && (
+              <button
+                className="btn-ghost text-slate-400"
+                onClick={() => onEditCustom(pickedCustom)}
+              >
+                Edit preset
+              </button>
+            )}
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function PresetCard({
+  emoji,
+  label,
+  tagline,
+  active,
+  isCurrent,
+  isCustom,
+  onClick,
+  onEdit,
+  onDelete,
+}: {
+  emoji: string;
+  label: string;
+  tagline: string;
+  active: boolean;
+  isCurrent?: boolean;
+  isCustom?: boolean;
+  onClick: () => void;
+  onEdit?: (e: MouseEvent) => void;
+  onDelete?: (e: MouseEvent) => void;
+}) {
+  return (
+    <div
+      className={`relative rounded-xl border transition ${
+        active
+          ? 'border-beacon-500/60 bg-beacon-600/15'
+          : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10'
+      }`}
+    >
+      {isCustom && (onEdit || onDelete) && (
+        <div className="absolute right-2 top-2 z-10 flex gap-1">
+          {onEdit && (
+            <button
+              type="button"
+              onClick={onEdit}
+              className="rounded px-1.5 py-0.5 text-[10px] text-slate-500 hover:bg-white/10 hover:text-slate-300"
+            >
+              Edit
+            </button>
+          )}
+          {onDelete && (
+            <button
+              type="button"
+              onClick={onDelete}
+              className="rounded px-1.5 py-0.5 text-[10px] text-slate-500 hover:bg-white/10 hover:text-rose-400"
+            >
+              Delete
+            </button>
+          )}
+        </div>
+      )}
+      <button
+        type="button"
+        onClick={onClick}
+        className="flex w-full items-start gap-3 p-3.5 text-left"
+      >
+        <span className="mt-0.5 text-xl leading-none">{emoji}</span>
+        <span className="min-w-0 pr-8">
+          <span className="flex items-center gap-1.5 text-sm font-semibold text-white">
+            {label}
+            {isCurrent && (
+              <span className="rounded-full bg-beacon-600/30 px-1.5 py-0.5 text-[10px] font-medium text-beacon-300">
+                current
+              </span>
+            )}
+            {isCustom && !isCurrent && (
+              <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] font-medium text-slate-400">
+                custom
+              </span>
+            )}
+          </span>
+          <span className="mt-0.5 block text-xs leading-relaxed text-slate-500">{tagline}</span>
+        </span>
+      </button>
     </div>
   );
 }

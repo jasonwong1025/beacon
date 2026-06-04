@@ -9,6 +9,7 @@ import {
 import { hostMatches } from '../modules/website-rules';
 import { formatHm } from '../modules/session-engine';
 import type { FocusSession, SessionRecord } from '../modules/types';
+import { rulesForProfile } from '../modules/types';
 import { transient } from './transient';
 import { flushActive } from './tracker';
 import { notify } from './notify';
@@ -25,6 +26,18 @@ function ensureTrackAlarm(): void {
 }
 
 export async function startSession(input: NewSessionInput): Promise<void> {
+  if (input.profileId) {
+    const customPresets = await storage.getCustomPresets();
+    const presetRules = rulesForProfile(input.profileId, customPresets).map((r, i) => ({
+      ...r,
+      id: `r_${Date.now().toString(36)}_${i}`,
+      createdAt: Date.now(),
+    }));
+    await storage.setRules(presetRules);
+    const settings = await storage.getSettings();
+    await storage.setSettings({ ...settings, userProfile: input.profileId });
+  }
+
   const session = createSession(input);
   await storage.setSession(session);
   await transient.clearAllGrants();
@@ -167,6 +180,7 @@ async function buildRecord(session: FocusSession): Promise<SessionRecord> {
     id: session.id,
     goal: session.goal,
     type: session.type,
+    profileId: session.profileId,
     durationMinutes: session.durationMinutes,
     startedAt: session.startedAt,
     endedAt: session.endedAt ?? Date.now(),

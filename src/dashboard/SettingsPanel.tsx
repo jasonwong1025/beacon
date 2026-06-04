@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { useSettings } from '../ui/useStorage';
+import { useSettings, useCustomPresets } from '../ui/useStorage';
 import { storage } from '../modules/storage';
 import { exportJSON, exportCSV } from '../modules/analytics';
-import { PROFILE_PRESETS } from '../modules/types';
+import { resolvePreset } from '../modules/types';
 
 export function SettingsPanel() {
   const [settings, setSettings] = useSettings();
+  const [customPresets] = useCustomPresets();
   const [cleared, setCleared] = useState(false);
 
   if (!settings) return null;
@@ -49,14 +50,14 @@ export function SettingsPanel() {
         <section className="card space-y-2">
           <h2 className="text-sm font-semibold text-slate-200">Your Profile</h2>
           {(() => {
-            const p = PROFILE_PRESETS.find((x) => x.id === settings.userProfile);
+            const p = resolvePreset(settings.userProfile, customPresets);
             return p ? (
               <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-3.5 py-3">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{p.emoji}</span>
                   <div>
                     <div className="text-sm font-semibold text-white">{p.label}</div>
-                    <div className="text-xs text-slate-500">{p.tagline}</div>
+                    <div className="text-xs text-slate-500">{p.tagline || p.desc}</div>
                   </div>
                 </div>
                 <span className="text-xs text-slate-500">

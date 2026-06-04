@@ -4,6 +4,7 @@ import {
   DEFAULT_RULES,
   type Settings,
   type WebsiteRule,
+  type CustomProfilePreset,
   type FocusSession,
   type BeaconEvent,
   type SessionRecord,
@@ -47,6 +48,14 @@ export const storage = {
   },
   async setRules(rules: WebsiteRule[]): Promise<void> {
     await set(STORAGE_KEYS.rules, rules);
+  },
+
+  // ---- Custom profile presets ----
+  async getCustomPresets(): Promise<CustomProfilePreset[]> {
+    return get<CustomProfilePreset[]>(STORAGE_KEYS.customPresets, []);
+  },
+  async setCustomPresets(presets: CustomProfilePreset[]): Promise<void> {
+    await set(STORAGE_KEYS.customPresets, presets);
   },
 
   // ---- Current session ----

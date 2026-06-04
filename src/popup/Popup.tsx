@@ -1,9 +1,18 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Brand, ProgressRing } from '../ui/components';
-import { useSession, useEvents, useHistory, useRules, useSettings, useNow } from '../ui/useStorage';
+import {
+  useSession,
+  useEvents,
+  useHistory,
+  useRules,
+  useSettings,
+  useCustomPresets,
+  useNow,
+} from '../ui/useStorage';
 import { sendMessage } from '../modules/messaging';
 import {
-  SESSION_TYPES,
+  buildSessionTypeOptions,
+  sessionTypeDisplay,
   type SessionType,
 } from '../modules/types';
 import {
@@ -42,21 +51,41 @@ export function Popup() {
 
 function SessionSetup() {
   const [settings] = useSettings();
+  const [customPresets] = useCustomPresets();
   const [goal, setGoal] = useState('');
-  const [type, setType] = useState<SessionType>('work');
+  const [selectedId, setSelectedId] = useState('work');
   const [duration, setDuration] = useState(50);
   const [customDuration, setCustomDuration] = useState('');
   const [pomodoro, setPomodoro] = useState(false);
   const [starting, setStarting] = useState(false);
 
+  const typeOptions = useMemo(
+    () => buildSessionTypeOptions(customPresets),
+    [customPresets]
+  );
+
+  useEffect(() => {
+    if (!settings?.userProfile) return;
+    const match = typeOptions.find((o) => o.id === settings.userProfile);
+    if (match) setSelectedId(match.id);
+  }, [settings?.userProfile, typeOptions]);
+
+  const selectedOption = typeOptions.find((o) => o.id === selectedId) ?? typeOptions[0];
+
   const start = async () => {
     const mins = customDuration ? Math.max(1, parseInt(customDuration, 10) || duration) : duration;
+    const profileId = selectedOption?.profileId;
+    const sessionType: SessionType = profileId
+      ? 'custom'
+      : (selectedId as SessionType);
+
     setStarting(true);
     await sendMessage({
       type: 'START_SESSION',
       payload: {
         goal,
-        type,
+        type: sessionType,
+        profileId,
         durationMinutes: mins,
         pomodoro: pomodoro
           ? {
@@ -87,21 +116,24 @@ function SessionSetup() {
 
       <div>
         <span className="label">Session type</span>
-        <div className="grid grid-cols-3 gap-2">
-          {SESSION_TYPES.map((t) => (
-            <button
-              key={t.value}
-              onClick={() => setType(t.value)}
-              className={`rounded-xl border px-2 py-2 text-xs font-medium transition ${
-                type === t.value
-                  ? 'border-beacon-500 bg-beacon-600/20 text-beacon-200'
-                  : 'border-white/10 bg-white/5 text-slate-400 hover:bg-white/10'
-              }`}
-            >
-              <span className="mr-1">{t.emoji}</span>
-              {t.label}
-            </button>
-          ))}
+        <div className="max-h-[112px] overflow-y-auto rounded-xl border border-white/5 bg-white/[0.02] p-1.5">
+          <div className="grid grid-cols-3 gap-2">
+            {typeOptions.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setSelectedId(t.id)}
+                className={`rounded-xl border px-2 py-2 text-xs font-medium transition ${
+                  selectedId === t.id
+                    ? 'border-beacon-500 bg-beacon-600/20 text-beacon-200'
+                    : 'border-white/10 bg-white/5 text-slate-400 hover:bg-white/10'
+                }`}
+              >
+                <span className="mr-1">{t.emoji}</span>
+                <span className="line-clamp-2">{t.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -159,6 +191,7 @@ function SessionSetup() {
 
 function ActiveSession() {
   const session = useSession();
+  const [customPresets] = useCustomPresets();
   const now = useNow();
   if (!session) return null;
 
@@ -171,7 +204,7 @@ function ActiveSession() {
     ? 1 - remaining / ((session.pomodoro?.breakMinutes ?? 5) * 60_000)
     : Math.min(1, elapsed / totalMs);
 
-  const typeMeta = SESSION_TYPES.find((t) => t.value === session.type);
+  const typeMeta = sessionTypeDisplay(session, customPresets);
 
   return (
     <div className="animate-fade-in flex flex-col items-center">
@@ -180,7 +213,7 @@ function ActiveSession() {
           {isBreak ? '☕ Break' : isPaused ? '⏸ Paused' : '● Focusing'}
         </span>
         <span className="text-slate-500">
-          {typeMeta?.emoji} {typeMeta?.label}
+          {typeMeta.emoji} {typeMeta.label}
           {session.pomodoro?.enabled && ` · Round ${session.pomodoroRound}`}
         </span>
       </div>

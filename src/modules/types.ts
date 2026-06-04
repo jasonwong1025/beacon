@@ -49,7 +49,7 @@ export interface Settings {
   driftReminderMinutes: number;
   notificationsEnabled: boolean;
   /** null = fresh install, onboarding not yet completed. */
-  userProfile: UserProfile | null;
+  userProfile: ProfileId | null;
 }
 
 export type SessionStatus = 'active' | 'paused' | 'break' | 'completed' | 'cancelled';
@@ -58,6 +58,8 @@ export interface FocusSession {
   id: string;
   goal: string;
   type: SessionType;
+  /** When set, display and rules come from this profile preset. */
+  profileId?: ProfileId;
   /** Planned duration in minutes. */
   durationMinutes: number;
   status: SessionStatus;
@@ -102,6 +104,7 @@ export interface SessionRecord {
   id: string;
   goal: string;
   type: SessionType;
+  profileId?: ProfileId;
   durationMinutes: number;
   startedAt: number;
   endedAt: number;
@@ -115,13 +118,14 @@ export interface SessionRecord {
 export interface StorageShape {
   settings: Settings;
   rules: WebsiteRule[];
+  customPresets: CustomProfilePreset[];
   currentSession: FocusSession | null;
   events: BeaconEvent[];
   history: SessionRecord[];
   /** Per-tab granted-continue domains, transient (kept in session storage). */
 }
 
-export type UserProfile =
+export type BuiltinProfile =
   | 'general'
   | 'student'
   | 'developer'
@@ -129,8 +133,14 @@ export type UserProfile =
   | 'researcher'
   | 'creator';
 
+/** Built-in preset id, or `custom_*` for user-created presets. */
+export type ProfileId = BuiltinProfile | string;
+
+/** @deprecated Use BuiltinProfile or ProfileId */
+export type UserProfile = BuiltinProfile;
+
 export interface ProfilePreset {
-  id: UserProfile;
+  id: BuiltinProfile;
   label: string;
   emoji: string;
   tagline: string;
@@ -138,6 +148,43 @@ export interface ProfilePreset {
   blocked: string[];
   warning: string[];
   allowed: string[];
+}
+
+/** User-created profile preset, stored in chrome.storage.local. */
+export interface CustomProfilePreset {
+  id: string;
+  label: string;
+  emoji: string;
+  tagline: string;
+  desc: string;
+  blocked: string[];
+  warning: string[];
+  allowed: string[];
+  createdAt: number;
+}
+
+export type AnyProfilePreset = ProfilePreset | CustomProfilePreset;
+
+export function isCustomProfileId(id: ProfileId): boolean {
+  return id.startsWith('custom_');
+}
+
+export function newCustomPresetId(): string {
+  return `custom_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
+}
+
+export function emptyCustomPreset(): CustomProfilePreset {
+  return {
+    id: newCustomPresetId(),
+    label: 'My Preset',
+    emoji: '✨',
+    tagline: '',
+    desc: '',
+    blocked: [],
+    warning: [],
+    allowed: [],
+    createdAt: Date.now(),
+  };
 }
 
 export const PROFILE_PRESETS: ProfilePreset[] = [
@@ -245,19 +292,80 @@ export const PROFILE_PRESETS: ProfilePreset[] = [
   },
 ];
 
-export function rulesForProfile(profile: UserProfile): WebsiteRule[] {
-  const preset = PROFILE_PRESETS.find((p) => p.id === profile);
-  if (!preset) return [];
+type PresetSiteLists = Pick<ProfilePreset, 'blocked' | 'warning' | 'allowed'>;
+
+export function rulesFromSiteLists(lists: PresetSiteLists): WebsiteRule[] {
   return [
-    ...preset.blocked.map(seedRule('blocked')),
-    ...preset.warning.map(seedRule('warning')),
-    ...preset.allowed.map(seedRule('allowed')),
+    ...lists.blocked.map(seedRule('blocked')),
+    ...lists.warning.map(seedRule('warning')),
+    ...lists.allowed.map(seedRule('allowed')),
   ];
+}
+
+export function rulesForProfile(
+  profile: ProfileId,
+  customPresets: CustomProfilePreset[] = []
+): WebsiteRule[] {
+  const preset = resolvePreset(profile, customPresets);
+  if (!preset) return [];
+  return rulesFromSiteLists(preset);
+}
+
+export function resolvePreset(
+  profile: ProfileId,
+  customPresets: CustomProfilePreset[] = []
+): AnyProfilePreset | null {
+  const builtin = PROFILE_PRESETS.find((p) => p.id === profile);
+  if (builtin) return builtin;
+  return customPresets.find((p) => p.id === profile) ?? null;
+}
+
+/** Options for the popup session-type picker (built-ins + custom profile presets). */
+export interface SessionTypeOption {
+  id: string;
+  label: string;
+  emoji: string;
+  profileId?: ProfileId;
+}
+
+export function buildSessionTypeOptions(
+  customPresets: CustomProfilePreset[]
+): SessionTypeOption[] {
+  const builtins: SessionTypeOption[] = SESSION_TYPES.filter((t) => t.value !== 'custom').map(
+    (t) => ({
+      id: t.value,
+      label: t.label,
+      emoji: t.emoji,
+    })
+  );
+  if (customPresets.length === 0) {
+    return [...builtins, { id: 'custom', label: 'Custom', emoji: '✨' }];
+  }
+  const customs: SessionTypeOption[] = customPresets.map((p) => ({
+    id: p.id,
+    label: p.label,
+    emoji: p.emoji,
+    profileId: p.id,
+  }));
+  return [...builtins, ...customs];
+}
+
+export function sessionTypeDisplay(
+  session: { type: SessionType; profileId?: ProfileId },
+  customPresets: CustomProfilePreset[] = []
+): { emoji: string; label: string } {
+  if (session.profileId) {
+    const preset = resolvePreset(session.profileId, customPresets);
+    if (preset) return { emoji: preset.emoji, label: preset.label };
+  }
+  const builtin = SESSION_TYPES.find((t) => t.value === session.type);
+  return { emoji: builtin?.emoji ?? '✨', label: builtin?.label ?? 'Custom' };
 }
 
 export const STORAGE_KEYS = {
   settings: 'beacon.settings',
   rules: 'beacon.rules',
+  customPresets: 'beacon.customPresets',
   currentSession: 'beacon.currentSession',
   events: 'beacon.events',
   history: 'beacon.history',
