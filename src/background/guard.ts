@@ -5,12 +5,19 @@ import { recordEvent } from './tracker';
 import { blockedPageUrl, warnPageUrl } from './pages';
 
 /**
- * Intercept a main-frame navigation. Returns true if it redirected the tab
- * (i.e. the navigation was blocked or warned).
+ * Intercept a main-frame navigation. Returns true if this function redirected
+ * the tab (i.e. did a JS-level redirect for a warning or an SPA block).
+ *
+ * @param skipBlockedRedirect  Pass `true` for `onBeforeNavigate` (HTTP
+ *   navigations) where `declarativeNetRequest` will already handle the
+ *   network-layer redirect to blocked.html — we only need to record the event.
+ *   Pass `false` for `onHistoryStateUpdated` (client-side SPA route changes)
+ *   where DNR never fires and guard must do the redirect itself.
  */
 export async function guardNavigation(
   tabId: number,
-  url: string
+  url: string,
+  skipBlockedRedirect = false
 ): Promise<boolean> {
   if (!isWebUrl(url)) return false;
 
@@ -30,7 +37,17 @@ export async function guardNavigation(
   const domain = hostFromUrl(url) ?? verdict.matchedHost ?? url;
 
   if (verdict.decision === 'block') {
+    // Always record the analytics event.
     await recordEvent('blocked', { domain, category: 'blocked' });
+
+    if (skipBlockedRedirect) {
+      // For HTTP navigations: DNR already issued the network-layer redirect to
+      // blocked.html — no JS redirect needed. Return false so callers know the
+      // tab URL hasn't been changed by this function.
+      return false;
+    }
+
+    // SPA fallback: pushState navigations bypass DNR, so redirect manually.
     const dest = blockedPageUrl({
       target: url,
       host: domain,

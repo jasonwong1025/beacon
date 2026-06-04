@@ -1,12 +1,16 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import '../styles/index.css';
 import { Logo } from '../ui/components';
 import { sendMessage } from '../modules/messaging';
+import { STORAGE_KEYS } from '../modules/types';
 
+// URL params present for both sources:
+//   DNR redirect:   ?host=instagram.com          (goal not in URL — read from storage)
+//   SPA fallback:   ?host=...&goal=...&reason=... (full params from guard.ts)
 const params = new URLSearchParams(location.search);
 const host = params.get('host') ?? 'this site';
-const goal = params.get('goal') ?? '';
+const goalParam = params.get('goal');   // null when arriving via DNR
 const reason = params.get('reason') ?? 'On your block list';
 
 function goBack() {
@@ -15,6 +19,19 @@ function goBack() {
 }
 
 function Blocked() {
+  // Goal may come from the URL (SPA guard fallback) or must be loaded from
+  // storage (DNR redirect doesn't encode the session goal in the URL).
+  const [goal, setGoal] = useState(goalParam ?? '');
+
+  useEffect(() => {
+    if (!goalParam) {
+      chrome.storage.local.get(STORAGE_KEYS.currentSession, (res) => {
+        const session = res[STORAGE_KEYS.currentSession];
+        if (session?.goal) setGoal(session.goal as string);
+      });
+    }
+  }, []);
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-ink-950 to-ink-900 px-6">
       <div className="animate-fade-in w-full max-w-md text-center">

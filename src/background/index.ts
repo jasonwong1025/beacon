@@ -1,5 +1,5 @@
 import { storage } from '../modules/storage';
-import { DEFAULT_SETTINGS } from '../modules/types';
+import { DEFAULT_SETTINGS, STORAGE_KEYS } from '../modules/types';
 import type { Message } from '../modules/messaging';
 import {
   startSession,
@@ -14,6 +14,7 @@ import { setActive, recordTabSwitch, flushActive, recordEvent } from './tracker'
 import { guardNavigation } from './guard';
 import { transient } from './transient';
 import { hostFromUrl } from '../modules/website-rules';
+import { syncBlockedRules } from './dnr';
 
 // ---- Lifecycle ----
 
@@ -31,12 +32,15 @@ chrome.runtime.onInstalled.addListener(async (details) => {
       await storage.setSettings({ ...s, userProfile: 'general' });
     }
   }
-  // Re-arm the periodic tracker alarm and badge after updates/restarts.
+  // Re-arm alarms, badge, and DNR rules when the service worker restarts.
   const session = await storage.getSession();
   if (session && (session.status === 'active' || session.status === 'break')) {
     chrome.alarms.create('beacon-track', { periodInMinutes: 1 });
     chrome.alarms.create('beacon-phase', { when: session.phaseEndsAt });
     await updateBadge(session);
+    // Restore DNR rules in case they were wiped when the service worker was terminated.
+    const rules = await storage.getRules();
+    await syncBlockedRules(rules, true);
   }
 });
 
@@ -46,6 +50,8 @@ chrome.runtime.onStartup.addListener(async () => {
     chrome.alarms.create('beacon-track', { periodInMinutes: 1 });
     chrome.alarms.create('beacon-phase', { when: session.phaseEndsAt });
     await updateBadge(session);
+    const rules = await storage.getRules();
+    await syncBlockedRules(rules, true);
   }
 });
 
@@ -107,15 +113,35 @@ async function handleMessage(
 
 // ---- Navigation interception ----
 
+// For real HTTP navigations: DNR handles the blocked-site redirect at the
+// network layer before the page renders. Guard only records the analytics event.
 chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
-  if (details.frameId !== 0) return; // main frame only
-  await guardNavigation(details.tabId, details.url);
+  if (details.frameId !== 0) return;
+  await guardNavigation(details.tabId, details.url, /* skipBlockedRedirect */ true);
 });
 
-// Catch client-side SPA navigations (e.g. YouTube) too.
+// For SPA/pushState navigations: DNR never fires (no network request), so
+// guard must redirect blocked sites itself.
 chrome.webNavigation.onHistoryStateUpdated.addListener(async (details) => {
   if (details.frameId !== 0) return;
-  await guardNavigation(details.tabId, details.url);
+  await guardNavigation(details.tabId, details.url, /* skipBlockedRedirect */ false);
+});
+
+// ---- Keep DNR rules in sync with live rule changes ----
+
+// If the user edits their website rules while a session is active, re-sync
+// the DNR rule set immediately so the new rules take effect without restarting.
+chrome.storage.onChanged.addListener(async (changes, area) => {
+  if (area !== 'local') return;
+  if (!(STORAGE_KEYS.rules in changes)) return;
+  const session = await storage.getSession();
+  const active =
+    !!session &&
+    (session.status === 'active' ||
+      session.status === 'break' ||
+      session.status === 'paused');
+  const rules = await storage.getRules();
+  await syncBlockedRules(rules, active);
 });
 
 // ---- Active-tab time tracking ----

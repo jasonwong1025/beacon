@@ -27,7 +27,15 @@ export default defineManifest({
     type: 'module',
   },
   options_page: 'src/dashboard/index.html',
-  permissions: ['storage', 'tabs', 'webNavigation', 'alarms', 'notifications', 'favicon'],
+  permissions: [
+    'storage',
+    'tabs',
+    'webNavigation',
+    'alarms',
+    'notifications',
+    'favicon',
+    'declarativeNetRequest',
+  ],
   host_permissions: ['<all_urls>'],
   web_accessible_resources: [
     {

@@ -13,6 +13,7 @@ import { resolvePreset, freshRulesForProfile } from '../modules/types';
 import { transient } from './transient';
 import { flushActive } from './tracker';
 import { notify } from './notify';
+import { syncBlockedRules, clearBlockedRules } from './dnr';
 
 const PHASE_ALARM = 'beacon-phase';
 const TRACK_ALARM = 'beacon-track';
@@ -48,6 +49,12 @@ export async function startSession(input: NewSessionInput): Promise<void> {
   await storage.setSession(session);
   await transient.clearAllGrants();
   await transient.setLastNudge(0);
+
+  // Install network-layer DNR blocking rules for all blocked domains so
+  // navigations are intercepted before the page renders (zero JS overhead).
+  const currentRules = await storage.getRules();
+  await syncBlockedRules(currentRules, true);
+
   schedulePhaseAlarm(session);
   ensureTrackAlarm();
   await updateBadge(session);
@@ -139,6 +146,8 @@ async function finalize(session: FocusSession): Promise<void> {
   await transient.setActiveTab(null);
   chrome.alarms.clear(PHASE_ALARM);
   chrome.alarms.clear(TRACK_ALARM);
+  // Remove all DNR blocking rules — session over, browsing is unrestricted.
+  await clearBlockedRules();
   await clearBadge();
 
   if (session.status === 'completed') {
