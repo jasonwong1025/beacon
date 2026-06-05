@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Beacon — Chrome Extension for Focus Sessions &amp; Intentional Browsing</title>
+    <meta
+      name="description"
+      content="Beacon is a free, open-source TypeScript + React Chrome extension (Manifest V3) for focus sessions, website blocking, smart YouTube/Reddit modes, and local-first productivity analytics. No account, no tracking."
+    />
+    <meta
+      name="keywords"
+      content="Chrome extension, focus app, website blocker, productivity, TypeScript, React, Tailwind CSS, Manifest V3, Pomodoro, intentional browsing, Beacon"
+    />
+    <meta name="author" content="Beacon" />
+    <link rel="canonical" href="https://jasonwong1025.github.io/beacon/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Beacon — Stay on course. Work with intention." />
+    <meta
+      property="og:description"
+      content="A TypeScript + React Chrome extension for focus sessions, gentle site blocking, and local productivity analytics."
+    />
+    <meta property="og:image" content="https://jasonwong1025.github.io/beacon/screenshots/website-rules.png" />
+    <meta property="og:url" content="https://jasonwong1025.github.io/beacon/" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0a0e1a;
+        --card: #161d31;
+        --text: #e2e8f0;
+        --muted: #94a3b8;
+        --accent: #3380fc;
+        --focus: #22c55e;
+        --warn: #f59e0b;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        background: linear-gradient(180deg, var(--bg) 0%, #0f1525 100%);
+        color: var(--text);
+        line-height: 1.6;
+      }
+      a { color: var(--accent); }
+      .wrap { max-width: 920px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+      header { text-align: center; margin-bottom: 2.5rem; }
+      h1 { font-size: 2.25rem; margin: 0 0 0.5rem; }
+      .tagline { color: var(--muted); font-size: 1.1rem; }
+      .lead {
+        margin: 1.5rem auto 0;
+        max-width: 720px;
+        font-size: 1.05rem;
+      }
+      .badges { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-top: 1.25rem; }
+      .badge {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 999px;
+        padding: 0.35rem 0.75rem;
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+      section { margin-top: 2.5rem; }
+      h2 { font-size: 1.35rem; margin-bottom: 1rem; }
+      .grid { display: grid; gap: 1.25rem; }
+      @media (min-width: 720px) { .grid.two { grid-template-columns: 1fr 1fr; } }
+      .card {
+        background: var(--card);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 1rem;
+        padding: 1.25rem;
+      }
+      .card img {
+        width: 100%;
+        border-radius: 0.75rem;
+        border: 1px solid rgba(255,255,255,0.08);
+        margin-top: 0.75rem;
+      }
+      .card strong { display: block; margin-bottom: 0.25rem; }
+      .card p { margin: 0; color: var(--muted); font-size: 0.92rem; }
+      ul { padding-left: 1.2rem; }
+      li { margin: 0.35rem 0; }
+      .cta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+      }
+      .btn {
+        display: inline-block;
+        padding: 0.65rem 1.1rem;
+        border-radius: 0.75rem;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.92rem;
+      }
+      .btn-primary { background: #1d61f2; color: #fff; }
+      .btn-ghost { background: rgba(255,255,255,0.06); color: var(--text); border: 1px solid rgba(255,255,255,0.1); }
+      footer { margin-top: 3rem; text-align: center; color: var(--muted); font-size: 0.85rem; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>🔦 Beacon</h1>
+        <p class="tagline">Stay on course. Work with intention.</p>
+        <p class="lead">
+          <strong>Beacon</strong> is an open-source <strong>TypeScript + React Chrome extension</strong>
+          built on <strong>Manifest V3</strong> for <strong>focus sessions</strong>, gentle
+          <strong>website blocking</strong>, <strong>Smart YouTube / Reddit</strong> modes, and
+          <strong>local-first productivity analytics</strong>. Guide your attention — don't just
+          gatekeep the web. No account, no cloud, no tracking.
+        </p>
+        <div class="badges" aria-label="Technology tags">
+          <span class="badge">chrome-extension</span>
+          <span class="badge">typescript</span>
+          <span class="badge">react</span>
+          <span class="badge">tailwindcss</span>
+          <span class="badge">vite</span>
+          <span class="badge">manifest-v3</span>
+          <span class="badge">productivity</span>
+          <span class="badge">focus-timer</span>
+          <span class="badge">website-blocker</span>
+          <span class="badge">pomodoro</span>
+        </div>
+        <div class="cta">
+          <a class="btn btn-primary" href="https://github.com/jasonwong1025/beacon">View on GitHub</a>
+          <a class="btn btn-ghost" href="https://github.com/jasonwong1025/beacon#-getting-started">Install locally</a>
+        </div>
+      </header>
+
+      <section aria-labelledby="screenshots-heading">
+        <h2 id="screenshots-heading">Screenshots</h2>
+        <div class="grid two">
+          <article class="card">
+            <strong>Start a focus session</strong>
+            <p>Set a goal, pick a profile preset, duration, and optional Pomodoro mode.</p>
+            <img
+              src="screenshots/popup-session-setup.png"
+              width="360"
+              height="auto"
+              alt="Beacon Chrome extension popup — focus session setup with goal, profile, duration, and Pomodoro toggle"
+              loading="lazy"
+            />
+          </article>
+          <article class="card">
+            <strong>Website rules &amp; Smart Modes</strong>
+            <p>Block, warn, or allow sites. Smart YouTube and Smart Reddit tame rabbit holes.</p>
+            <img
+              src="screenshots/website-rules.png"
+              width="480"
+              height="auto"
+              alt="Beacon extension dashboard — Website Rules page with Smart YouTube, Smart Reddit, and editable site lists"
+              loading="lazy"
+            />
+          </article>
+        </div>
+      </section>
+
+      <section aria-labelledby="features-heading">
+        <h2 id="features-heading">What Beacon does</h2>
+        <div class="card">
+          <ul>
+            <li><strong>Focus sessions</strong> — goal, timer presets, Pomodoro, profile-based site lists</li>
+            <li><strong>Website rules</strong> — Blocked (hard stop), Warning (intent check), Allowed (no interruption)</li>
+            <li><strong>Smart modes</strong> — keep YouTube tutorials and Reddit subreddits open; warn on feeds &amp; Shorts</li>
+            <li><strong>Analytics</strong> — focus ratio, distraction events, daily / weekly / monthly reports</li>
+            <li><strong>Privacy-first</strong> — all data stored locally; export JSON or CSV anytime</li>
+          </ul>
+        </div>
+      </section>
+
+      <section aria-labelledby="docs-heading">
+        <h2 id="docs-heading">Documentation</h2>
+        <div class="grid two">
+          <article class="card">
+            <strong><a href="user-guide.md">User guide</a></strong>
+            <p>Install, start sessions, manage rules, read reports.</p>
+          </article>
+          <article class="card">
+            <strong><a href="architecture.md">Architecture</a></strong>
+            <p>Service worker, declarativeNetRequest blocking, data model, navigation flow.</p>
+          </article>
+          <article class="card">
+            <strong><a href="roadmap.md">Roadmap</a></strong>
+            <p>v1.0 shipped features and planned v1.5 / v2.0 work.</p>
+          </article>
+          <article class="card">
+            <strong><a href="https://github.com/jasonwong1025/beacon/blob/main/README.md">README (English)</a></strong>
+            <p>Full project overview, tech stack, and developer setup.</p>
+          </article>
+        </div>
+      </section>
+
+      <section aria-labelledby="stack-heading">
+        <h2 id="stack-heading">Built with</h2>
+        <div class="card">
+          <p>
+            React 18 · TypeScript · Tailwind CSS · Vite ·
+            <code>@crxjs/vite-plugin</code> · Chrome APIs
+            (<code>storage</code>, <code>tabs</code>, <code>webNavigation</code>,
+            <code>declarativeNetRequest</code>, <code>alarms</code>)
+          </p>
+          <p style="margin-top: 0.75rem">
+            Ideal for developers looking for a modern <strong>Chrome extension boilerplate</strong>
+            with real productivity features — not just a Hello World demo.
+          </p>
+        </div>
+      </section>
+
+      <footer>
+        <p>MIT License · <a href="https://github.com/jasonwong1025/beacon">github.com/jasonwong1025/beacon</a></p>
+        <p><a href="../README.zh-CN.md">简体中文 README</a></p>
+      </footer>
+    </div>
+  </body>
+</html>

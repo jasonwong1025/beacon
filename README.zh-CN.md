@@ -6,7 +6,7 @@
 
 **保持专注，有意而为。**
 
-一款以生产力为导向的 Chrome 扩展，帮助你在浏览时始终对齐目标——引导而非封锁。
+**Beacon** 是一款开源的 **TypeScript + React Chrome 扩展（Manifest V3）**，提供专注会话、网站拦截、智能 YouTube/Reddit 模式与本地生产力统计——引导你有意浏览，而非粗暴封锁网络。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Chrome Extension](https://img.shields.io/badge/Chrome-MV3-4285F4?logo=googlechrome&logoColor=white)](https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3)
@@ -204,9 +204,16 @@ beacon/
 
 | 文档 | 说明 |
 |---|---|
+| [**文档站点（GitHub Pages）**](https://jasonwong1025.github.io/beacon/) | 可搜索的项目主页 — 在 **Settings → Pages → `/docs`** 启用 |
 | [`docs/user-guide.md`](docs/user-guide.md) | 用户指南 — 会话、规则、报告（英文） |
 | [`docs/architecture.md`](docs/architecture.md) | 数据模型、Service Worker、导航流程（英文） |
 | [`docs/roadmap.md`](docs/roadmap.md) | v1.0 已发布 · v1.5 进行中 · v2.0 规划中（英文） |
+
+### 建议的 GitHub 仓库标签
+
+在 **Repository → About → Topics** 中添加：
+
+`chrome-extension` `manifest-v3` `typescript` `react` `tailwindcss` `vite` `productivity` `focus` `website-blocker` `pomodoro` `crxjs`
 
 ---
 

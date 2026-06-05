@@ -6,7 +6,7 @@
 
 **Stay on course. Work with intention.**
 
-A productivity-focused Chrome extension that helps you stay aligned with your goals while browsing — guiding rather than gatekeeping.
+**Beacon** is an open-source **TypeScript + React Chrome extension (Manifest V3)** for focus sessions, website blocking, Smart YouTube/Reddit modes, and local-first productivity analytics — guiding intentional browsing rather than gatekeeping the web.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Chrome Extension](https://img.shields.io/badge/Chrome-MV3-4285F4?logo=googlechrome&logoColor=white)](https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3)
@@ -204,9 +204,16 @@ beacon/
 
 | Doc | Description |
 |---|---|
+| [**docs site (GitHub Pages)**](https://jasonwong1025.github.io/beacon/) | Searchable project hub — enable via **Settings → Pages → `/docs`** |
 | [`docs/user-guide.md`](docs/user-guide.md) | End-user walkthrough — sessions, rules, reports |
 | [`docs/architecture.md`](docs/architecture.md) | Data model, service worker, navigation flow |
 | [`docs/roadmap.md`](docs/roadmap.md) | v1.0 shipped · v1.5 in progress · v2.0 planned |
+
+### Suggested GitHub repository topics
+
+Add these under **Repository → About → Topics** for discoverability:
+
+`chrome-extension` `manifest-v3` `typescript` `react` `tailwindcss` `vite` `productivity` `focus` `website-blocker` `pomodoro` `crxjs`
 
 ---
 
