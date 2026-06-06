@@ -1,218 +1,655 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Beacon — Chrome Extension for Focus Sessions &amp; Intentional Browsing</title>
-    <meta
-      name="description"
-      content="Beacon is a free, open-source TypeScript + React Chrome extension (Manifest V3) for focus sessions, website blocking, smart YouTube/Reddit modes, and local-first productivity analytics. No account, no tracking."
-    />
-    <meta
-      name="keywords"
-      content="Chrome extension, focus app, website blocker, productivity, TypeScript, React, Tailwind CSS, Manifest V3, Pomodoro, intentional browsing, Beacon"
-    />
-    <meta name="author" content="Beacon" />
+    
+    <!-- Core SEO -->
+    <title>Beacon — Intentional Browsing & Focus Sessions Chrome Extension</title>
+    <meta name="description" content="Beacon is a free, open-source TypeScript + React Chrome extension (Manifest V3) for focus sessions, website blocking, smart YouTube/Reddit modes, and local-first productivity analytics." />
+    <meta name="keywords" content="Chrome extension, focus app, website blocker, productivity, TypeScript, React, Tailwind CSS, Manifest V3, Pomodoro, intentional browsing, Beacon, open source blocker" />
+    <meta name="author" content="Beacon Team" />
     <link rel="canonical" href="https://jasonwong1025.github.io/beacon/" />
+    
+    <!-- Geo Targeting -->
+    <meta name="geo.region" content="Global" />
+    <meta name="geo.placename" content="World" />
+    
+    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Beacon — Stay on course. Work with intention." />
-    <meta
-      property="og:description"
-      content="A TypeScript + React Chrome extension for focus sessions, gentle site blocking, and local productivity analytics."
-    />
+    <meta property="og:description" content="A TypeScript + React Chrome extension for focus sessions, gentle site blocking, and local productivity analytics. Take back control of your attention." />
     <meta property="og:image" content="https://jasonwong1025.github.io/beacon/screenshots/website-rules.png" />
     <meta property="og:url" content="https://jasonwong1025.github.io/beacon/" />
+    <meta property="og:site_name" content="Beacon Extension" />
+    
+    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Beacon — Intentional Browsing Extension" />
+    <meta name="twitter:description" content="A modern Manifest V3 Chrome extension built with React & TypeScript for focus sessions and gentle website blocking." />
+    <meta name="twitter:image" content="https://jasonwong1025.github.io/beacon/screenshots/website-rules.png" />
+
+    <!-- JSON-LD Schema Markup -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Beacon",
+      "operatingSystem": "Chrome OS, Windows, macOS, Linux",
+      "applicationCategory": "ProductivityApplication",
+      "description": "A productivity-focused Chrome extension that helps you stay aligned with your goals while browsing.",
+      "url": "https://jasonwong1025.github.io/beacon/",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
+
     <style>
       :root {
-        color-scheme: dark;
-        --bg: #0a0e1a;
-        --card: #161d31;
-        --text: #e2e8f0;
-        --muted: #94a3b8;
-        --accent: #3380fc;
-        --focus: #22c55e;
-        --warn: #f59e0b;
+        --bg-base: #03050a;
+        --card-bg: rgba(16, 22, 38, 0.4);
+        --card-border: rgba(255, 255, 255, 0.08);
+        --card-hover-border: rgba(51, 128, 252, 0.5);
+        --text-main: #f8fafc;
+        --text-muted: #94a3b8;
+        --accent-solid: #3380fc;
+        --accent-hover: #59a4ff;
+        --accent-glow: rgba(51, 128, 252, 0.15);
       }
-      * { box-sizing: border-box; }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
       body {
-        margin: 0;
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-        background: linear-gradient(180deg, var(--bg) 0%, #0f1525 100%);
-        color: var(--text);
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        background-color: var(--bg-base);
+        color: var(--text-main);
         line-height: 1.6;
+        min-height: 100vh;
+        overflow-x: hidden;
       }
-      a { color: var(--accent); }
-      .wrap { max-width: 920px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
-      header { text-align: center; margin-bottom: 2.5rem; }
-      h1 { font-size: 2.25rem; margin: 0 0 0.5rem; }
-      .tagline { color: var(--muted); font-size: 1.1rem; }
-      .lead {
-        margin: 1.5rem auto 0;
-        max-width: 720px;
-        font-size: 1.05rem;
+
+      /* Animated Grid Background */
+      .bg-grid {
+        position: fixed;
+        inset: 0;
+        z-index: -3;
+        background-size: 50px 50px;
+        background-image: 
+          linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        mask-image: radial-gradient(circle at center, black 20%, transparent 80%);
+        -webkit-mask-image: radial-gradient(circle at center, black 20%, transparent 80%);
       }
-      .badges { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-top: 1.25rem; }
-      .badge {
-        background: rgba(255,255,255,0.06);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 999px;
-        padding: 0.35rem 0.75rem;
-        font-size: 0.8rem;
-        color: var(--muted);
+
+      /* Mouse Follow Glow */
+      #mouse-glow {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 800px;
+        height: 800px;
+        background: radial-gradient(circle, var(--accent-glow) 0%, transparent 60%);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        z-index: -2;
+        transition: opacity 0.3s ease;
       }
-      section { margin-top: 2.5rem; }
-      h2 { font-size: 1.35rem; margin-bottom: 1rem; }
-      .grid { display: grid; gap: 1.25rem; }
-      @media (min-width: 720px) { .grid.two { grid-template-columns: 1fr 1fr; } }
-      .card {
-        background: var(--card);
-        border: 1px solid rgba(255,255,255,0.06);
-        border-radius: 1rem;
-        padding: 1.25rem;
+
+      a { color: var(--accent-solid); text-decoration: none; transition: color 0.2s ease; }
+      a:hover { color: var(--accent-hover); }
+
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 5rem 1.5rem;
+        position: relative;
+        z-index: 1;
       }
-      .card img {
-        width: 100%;
-        border-radius: 0.75rem;
-        border: 1px solid rgba(255,255,255,0.08);
-        margin-top: 0.75rem;
+
+      /* Hero Section */
+      .hero {
+        text-align: center;
+        margin-bottom: 6rem;
+        animation: fadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
       }
-      .card strong { display: block; margin-bottom: 0.25rem; }
-      .card p { margin: 0; color: var(--muted); font-size: 0.92rem; }
-      ul { padding-left: 1.2rem; }
-      li { margin: 0.35rem 0; }
-      .cta {
+
+      @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .hero h1 {
+        font-size: clamp(3rem, 6vw, 5rem);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        margin-bottom: 1.5rem;
+        background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        filter: drop-shadow(0px 4px 24px rgba(255,255,255,0.1));
+      }
+
+      .hero .tagline {
+        font-size: 1.4rem;
+        color: var(--accent-hover);
+        font-weight: 500;
+        margin-bottom: 1.5rem;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+
+      .hero .lead {
+        font-size: 1.15rem;
+        color: var(--text-muted);
+        max-width: 700px;
+        margin: 0 auto 3rem;
+        line-height: 1.8;
+      }
+
+      /* Badges */
+      .badges {
         display: flex;
         flex-wrap: wrap;
         gap: 0.75rem;
-        margin-top: 1.5rem;
+        justify-content: center;
+        margin-bottom: 3rem;
       }
+
+      .badge {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 9999px;
+        padding: 0.5rem 1.25rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+      }
+      .badge:hover {
+        background: rgba(51, 128, 252, 0.1);
+        border-color: var(--accent-solid);
+        color: #fff;
+        transform: translateY(-2px);
+      }
+
+      /* Buttons */
+      .cta-group {
+        display: flex;
+        gap: 1.25rem;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
       .btn {
-        display: inline-block;
-        padding: 0.65rem 1.1rem;
-        border-radius: 0.75rem;
-        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.85rem 2rem;
+        border-radius: 1rem;
         font-weight: 600;
-        font-size: 0.92rem;
+        font-size: 1.05rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
       }
-      .btn-primary { background: #1d61f2; color: #fff; }
-      .btn-ghost { background: rgba(255,255,255,0.06); color: var(--text); border: 1px solid rgba(255,255,255,0.1); }
-      footer { margin-top: 3rem; text-align: center; color: var(--muted); font-size: 0.85rem; }
+
+      .btn-primary {
+        background: var(--accent-solid);
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: 0 8px 24px rgba(51, 128, 252, 0.3);
+      }
+      
+      .btn-primary::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(rgba(255,255,255,0.2), transparent);
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 12px 32px rgba(51, 128, 252, 0.5);
+      }
+      .btn-primary:hover::after { opacity: 1; }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--text-main);
+        border: 1px solid var(--card-border);
+        backdrop-filter: blur(10px);
+      }
+      .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.08);
+        transform: translateY(-3px);
+        border-color: rgba(255, 255, 255, 0.3);
+      }
+
+      /* Sections & Grid */
+      section {
+        margin-top: 6rem;
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      
+      section.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      section h2 {
+        font-size: 2rem;
+        margin-bottom: 2rem;
+        font-weight: 700;
+        text-align: center;
+        background: linear-gradient(to right, #fff, #94a3b8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .grid {
+        display: grid;
+        gap: 2rem;
+      }
+      @media (min-width: 768px) {
+        .grid-2 { grid-template-columns: repeat(2, 1fr); }
+      }
+
+      /* Interactive Cards */
+      .card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* Card Hover Spotlight Effect */
+      .card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          800px circle at var(--mouse-x) var(--mouse-y),
+          rgba(255, 255, 255, 0.06),
+          transparent 40%
+        );
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .card:hover {
+        transform: translateY(-8px);
+        border-color: var(--card-hover-border);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(51, 128, 252, 0.2);
+      }
+      .card:hover::before { opacity: 1; }
+
+      .card img {
+        width: 100%;
+        height: auto;
+        border-radius: 0.75rem;
+        border: 1px solid rgba(255,255,255,0.05);
+        margin-top: 1.5rem;
+        transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        position: relative;
+        z-index: 2;
+      }
+      .card:hover img {
+        transform: scale(1.03) translateY(-4px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      }
+
+      .card h3 {
+        font-size: 1.4rem;
+        margin-bottom: 0.75rem;
+        color: var(--text-main);
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .card p {
+        color: var(--text-muted);
+        font-size: 1.05rem;
+        line-height: 1.7;
+        position: relative;
+        z-index: 2;
+      }
+
+      /* Feature List */
+      ul.feature-list {
+        list-style: none;
+        padding: 0;
+        display: grid;
+        gap: 1.25rem;
+      }
+      ul.feature-list li {
+        position: relative;
+        padding-left: 2.5rem;
+        color: var(--text-muted);
+        font-size: 1.1rem;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.05);
+        padding: 1.25rem 1.25rem 1.25rem 3.5rem;
+        border-radius: 1rem;
+        transition: transform 0.2s ease, background 0.2s ease;
+      }
+      ul.feature-list li:hover {
+        transform: translateX(8px);
+        background: rgba(255,255,255,0.04);
+        border-color: rgba(51, 128, 252, 0.3);
+      }
+      ul.feature-list li::before {
+        content: '✦';
+        position: absolute;
+        left: 1.25rem;
+        top: 1.25rem;
+        color: var(--accent-solid);
+        font-size: 1.2rem;
+        filter: drop-shadow(0 0 8px var(--accent-solid));
+      }
+      ul.feature-list strong { color: var(--text-main); display: block; margin-bottom: 0.25rem; }
+
+      /* Footer */
+      footer {
+        margin-top: 7rem;
+        padding: 3rem 0;
+        border-top: 1px solid var(--card-border);
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 1rem;
+      }
+      footer a { margin: 0 0.75rem; font-weight: 500; }
+
+      /* Custom Cursor */
+      @media (pointer: fine) {
+        body, a, button, .interactive-card {
+          cursor: none !important;
+        }
+
+        #cursor-dot, #cursor-outline {
+          position: fixed;
+          top: 0; left: 0;
+          border-radius: 50%;
+          z-index: 9999;
+          pointer-events: none;
+          transform: translate(-50%, -50%);
+          opacity: 0; /* Hidden until mouse moves */
+          transition: opacity 0.3s ease;
+        }
+
+        #cursor-dot {
+          width: 8px;
+          height: 8px;
+          background-color: var(--accent-solid);
+          box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        #cursor-outline {
+          width: 40px;
+          height: 40px;
+          border: 1.5px solid rgba(51, 128, 252, 0.5);
+          transition: width 0.2s ease, height 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.3s ease;
+        }
+
+        #cursor-outline.hover {
+          width: 60px;
+          height: 60px;
+          background-color: rgba(51, 128, 252, 0.1);
+          border-color: rgba(51, 128, 252, 0.9);
+          backdrop-filter: blur(2px);
+        }
+      }
+
+      /* Scrollbar */
+      ::-webkit-scrollbar { width: 10px; }
+      ::-webkit-scrollbar-track { background: var(--bg-base); }
+      ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 5px; }
+      ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+
     </style>
   </head>
   <body>
-    <div class="wrap">
-      <header>
-        <h1>🔦 Beacon</h1>
+    <!-- Custom Cursor -->
+    <div id="cursor-dot"></div>
+    <div id="cursor-outline"></div>
+
+    <!-- Background Elements -->
+    <div class="bg-grid"></div>
+    <div id="mouse-glow"></div>
+    
+    <main class="container">
+      <header class="hero">
+        <div style="display: inline-block; padding: 1rem; border-radius: 2rem; background: rgba(51,128,252,0.1); border: 1px solid rgba(51,128,252,0.2); margin-bottom: 2rem; box-shadow: 0 0 40px rgba(51,128,252,0.2);">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" stroke="#3380fc" strokeWidth="1.6" opacity="0.4" />
+            <circle cx="12" cy="12" r="5.5" stroke="#59a4ff" strokeWidth="1.6" />
+            <circle cx="12" cy="12" r="2" fill="#59a4ff" />
+            <path d="M12 1.5V4M12 20v2.5M1.5 12H4M20 12h2.5" stroke="#3380fc" strokeWidth="1.6" strokeLinecap="round" />
+          </svg>
+        </div>
+        <h1>Beacon</h1>
         <p class="tagline">Stay on course. Work with intention.</p>
         <p class="lead">
-          <strong>Beacon</strong> is an open-source <strong>TypeScript + React Chrome extension</strong>
-          built on <strong>Manifest V3</strong> for <strong>focus sessions</strong>, gentle
-          <strong>website blocking</strong>, <strong>Smart YouTube / Reddit</strong> modes, and
-          <strong>local-first productivity analytics</strong>. Guide your attention — don't just
-          gatekeep the web. No account, no cloud, no tracking.
+          An open-source <strong>TypeScript + React Chrome extension</strong> built on <strong>Manifest V3</strong>. 
+          Empower yourself with focus sessions, gentle website blocking, Smart YouTube / Reddit modes, and local-first productivity analytics. Guide your attention — don't just gatekeep the web.
         </p>
-        <div class="badges" aria-label="Technology tags">
-          <span class="badge">chrome-extension</span>
-          <span class="badge">typescript</span>
-          <span class="badge">react</span>
-          <span class="badge">tailwindcss</span>
-          <span class="badge">vite</span>
-          <span class="badge">manifest-v3</span>
-          <span class="badge">productivity</span>
-          <span class="badge">focus-timer</span>
-          <span class="badge">website-blocker</span>
-          <span class="badge">pomodoro</span>
+        
+        <div class="badges" aria-label="Technology stack">
+          <span class="badge">🧩 Manifest V3</span>
+          <span class="badge">📘 TypeScript</span>
+          <span class="badge">⚛️ React 18</span>
+          <span class="badge">🌊 Tailwind CSS</span>
+          <span class="badge">⚡ Vite + CRXJS</span>
+          <span class="badge">🔒 Local-First</span>
         </div>
-        <div class="cta">
-          <a class="btn btn-primary" href="https://github.com/jasonwong1025/beacon">View on GitHub</a>
-          <a class="btn btn-ghost" href="https://github.com/jasonwong1025/beacon#-getting-started">Install locally</a>
+        
+        <div class="cta-group">
+          <a class="btn btn-primary" href="https://github.com/jasonwong1025/beacon" target="_blank" rel="noopener noreferrer">
+            <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24" style="margin-right: 10px;"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.699-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.379.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.161 22 16.418 22 12c0-5.523-4.477-10-10-10z"></path></svg>
+            View on GitHub
+          </a>
+          <a class="btn btn-secondary" href="https://github.com/jasonwong1025/beacon#-getting-started">
+            Install Locally
+          </a>
         </div>
       </header>
 
-      <section aria-labelledby="screenshots-heading">
-        <h2 id="screenshots-heading">Screenshots</h2>
-        <div class="grid two">
-          <article class="card">
-            <strong>Start a focus session</strong>
-            <p>Set a goal, pick a profile preset, duration, and optional Pomodoro mode.</p>
-            <img
-              src="screenshots/popup-session-setup.png"
-              width="360"
-              height="auto"
-              alt="Beacon Chrome extension popup — focus session setup with goal, profile, duration, and Pomodoro toggle"
-              loading="lazy"
-            />
+      <section class="scroll-anim" aria-labelledby="screenshots-heading">
+        <h2 id="screenshots-heading">Visual Preview</h2>
+        <div class="grid grid-2">
+          <article class="card interactive-card">
+            <h3>🎯 Start a Focus Session</h3>
+            <p>Set a goal, pick a profile preset, duration, and optional Pomodoro mode right from the popup.</p>
+            <div style="overflow: hidden; border-radius: 0.75rem; margin-top: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+              <img src="screenshots/popup-session-setup.png" alt="Beacon popup interface showing session setup" loading="lazy" />
+            </div>
           </article>
-          <article class="card">
-            <strong>Website rules &amp; Smart Modes</strong>
-            <p>Block, warn, or allow sites. Smart YouTube and Smart Reddit tame rabbit holes.</p>
-            <img
-              src="screenshots/website-rules.png"
-              width="480"
-              height="auto"
-              alt="Beacon extension dashboard — Website Rules page with Smart YouTube, Smart Reddit, and editable site lists"
-              loading="lazy"
-            />
+          <article class="card interactive-card">
+            <h3>🛡️ Website Rules &amp; Dashboard</h3>
+            <p>Block, warn, or allow sites. Keep YouTube tutorials open while blocking Shorts using Smart Modes.</p>
+            <div style="overflow: hidden; border-radius: 0.75rem; margin-top: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+              <img src="screenshots/website-rules.png" alt="Beacon dashboard displaying website rules and analytics" loading="lazy" />
+            </div>
           </article>
         </div>
       </section>
 
-      <section aria-labelledby="features-heading">
-        <h2 id="features-heading">What Beacon does</h2>
-        <div class="card">
-          <ul>
-            <li><strong>Focus sessions</strong> — goal, timer presets, Pomodoro, profile-based site lists</li>
-            <li><strong>Website rules</strong> — Blocked (hard stop), Warning (intent check), Allowed (no interruption)</li>
-            <li><strong>Smart modes</strong> — keep YouTube tutorials and Reddit subreddits open; warn on feeds &amp; Shorts</li>
-            <li><strong>Analytics</strong> — focus ratio, distraction events, daily / weekly / monthly reports</li>
-            <li><strong>Privacy-first</strong> — all data stored locally; export JSON or CSV anytime</li>
+      <section class="scroll-anim" aria-labelledby="features-heading">
+        <h2 id="features-heading">Core Features</h2>
+        <div class="card interactive-card" style="padding: 2.5rem;">
+          <ul class="feature-list">
+            <li>
+              <strong>Focus Sessions</strong>
+              Define a goal, choose a timer preset, use Pomodoro, and apply profile-based site lists.
+            </li>
+            <li>
+              <strong>Intelligent Blocking</strong>
+              Blocked (hard stop via <code>declarativeNetRequest</code>), Warning (intent check page), Allowed (no interruption).
+            </li>
+            <li>
+              <strong>Smart Modes</strong>
+              Allow YouTube <code>/watch</code> but warn on feeds &amp; Shorts; allow specific Subreddits but warn on the popular feed.
+            </li>
+            <li>
+              <strong>Local Analytics</strong>
+              Dashboard tracks focus ratio, distraction events, and daily/weekly/monthly reports.
+            </li>
+            <li>
+              <strong>100% Privacy</strong>
+              All your data is stored locally using <code>chrome.storage</code>. Export your JSON or CSV anytime. No tracking.
+            </li>
           </ul>
         </div>
       </section>
 
-      <section aria-labelledby="docs-heading">
-        <h2 id="docs-heading">Documentation</h2>
-        <div class="grid two">
-          <article class="card">
-            <strong><a href="user-guide.md">User guide</a></strong>
-            <p>Install, start sessions, manage rules, read reports.</p>
-          </article>
-          <article class="card">
-            <strong><a href="architecture.md">Architecture</a></strong>
-            <p>Service worker, declarativeNetRequest blocking, data model, navigation flow.</p>
-          </article>
-          <article class="card">
-            <strong><a href="roadmap.md">Roadmap</a></strong>
-            <p>v1.0 shipped features and planned v1.5 / v2.0 work.</p>
-          </article>
-          <article class="card">
-            <strong><a href="https://github.com/jasonwong1025/beacon/blob/main/README.md">README (English)</a></strong>
-            <p>Full project overview, tech stack, and developer setup.</p>
-          </article>
-        </div>
-      </section>
-
-      <section aria-labelledby="stack-heading">
-        <h2 id="stack-heading">Built with</h2>
-        <div class="card">
-          <p>
-            React 18 · TypeScript · Tailwind CSS · Vite ·
-            <code>@crxjs/vite-plugin</code> · Chrome APIs
-            (<code>storage</code>, <code>tabs</code>, <code>webNavigation</code>,
-            <code>declarativeNetRequest</code>, <code>alarms</code>)
-          </p>
-          <p style="margin-top: 0.75rem">
-            Ideal for developers looking for a modern <strong>Chrome extension boilerplate</strong>
-            with real productivity features — not just a Hello World demo.
-          </p>
+      <section class="scroll-anim" aria-labelledby="docs-heading">
+        <h2 id="docs-heading">Documentation Hub</h2>
+        <div class="grid grid-2">
+          <a href="user-guide.md" class="card interactive-card" style="display: block;">
+            <h3>📖 User Guide</h3>
+            <p>Learn how to install Beacon, start focus sessions, manage rules, and understand your reports.</p>
+          </a>
+          <a href="architecture.md" class="card interactive-card" style="display: block;">
+            <h3>⚙️ Architecture</h3>
+            <p>Deep dive into the Service Worker, MV3 declarativeNetRequest blocking, data model, and navigation flow.</p>
+          </a>
+          <a href="roadmap.md" class="card interactive-card" style="display: block;">
+            <h3>🗺️ Roadmap</h3>
+            <p>See the shipped features for v1.0 and what's coming in v1.5 and v2.0.</p>
+          </a>
+          <a href="https://github.com/jasonwong1025/beacon/blob/main/README.md" class="card interactive-card" style="display: block;">
+            <h3>💻 Developer README</h3>
+            <p>Get the full project overview, tech stack, and instructions for local development.</p>
+          </a>
         </div>
       </section>
 
       <footer>
-        <p>MIT License · <a href="https://github.com/jasonwong1025/beacon">github.com/jasonwong1025/beacon</a></p>
-        <p><a href="../README.zh-CN.md">简体中文 README</a></p>
+        <p>&copy; 2026 Beacon. Licensed under the MIT License.</p>
+        <p style="margin-top: 1rem;">
+          <a href="https://github.com/jasonwong1025/beacon">GitHub Repository</a> | 
+          <a href="../README.zh-CN.md">简体中文 README</a>
+        </p>
       </footer>
-    </div>
+    </main>
+
+    <!-- Interactive Scripts -->
+    <script>
+      // 1. Mouse Follow Glow & Custom Cursor
+      const glow = document.getElementById('mouse-glow');
+      const cursorDot = document.getElementById('cursor-dot');
+      const cursorOutline = document.getElementById('cursor-outline');
+      
+      let mouseX = window.innerWidth / 2;
+      let mouseY = window.innerHeight / 2;
+      let outlineX = mouseX;
+      let outlineY = mouseY;
+      let isMouseMoving = false;
+
+      // Only enable custom cursor if device has fine pointer (mouse)
+      const hasFinePointer = window.matchMedia('(pointer: fine)').matches;
+
+      document.body.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        
+        // Update glow
+        glow.style.transform = `translate(calc(${mouseX}px - 50%), calc(${mouseY}px - 50%))`;
+        
+        if (hasFinePointer) {
+          if (!isMouseMoving) {
+            cursorDot.style.opacity = 1;
+            cursorOutline.style.opacity = 1;
+            isMouseMoving = true;
+          }
+          // Dot follows instantly
+          cursorDot.style.transform = `translate(calc(${mouseX}px - 50%), calc(${mouseY}px - 50%))`;
+        }
+      });
+
+      if (hasFinePointer) {
+        // Animation loop for outline (spring effect)
+        function animateCursor() {
+          let distX = mouseX - outlineX;
+          let distY = mouseY - outlineY;
+          
+          outlineX += distX * 0.15;
+          outlineY += distY * 0.15;
+          
+          cursorOutline.style.transform = `translate(calc(${outlineX}px - 50%), calc(${outlineY}px - 50%))`;
+          requestAnimationFrame(animateCursor);
+        }
+        animateCursor();
+
+        // Handle mouse leaving/entering window
+        document.addEventListener('mouseout', () => {
+          cursorDot.style.opacity = 0;
+          cursorOutline.style.opacity = 0;
+          isMouseMoving = false;
+        });
+        
+        document.addEventListener('mouseover', () => {
+          cursorDot.style.opacity = 1;
+          cursorOutline.style.opacity = 1;
+          isMouseMoving = true;
+        });
+
+        // Hover effects
+        const interactives = document.querySelectorAll('a, button, .interactive-card');
+        interactives.forEach(el => {
+          el.addEventListener('mouseenter', () => {
+            cursorOutline.classList.add('hover');
+          });
+          el.addEventListener('mouseleave', () => {
+            cursorOutline.classList.remove('hover');
+          });
+        });
+      }
+
+      // 2. Card Spotlight Effect
+      document.querySelectorAll('.interactive-card').forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          card.style.setProperty('--mouse-x', `${x}px`);
+          card.style.setProperty('--mouse-y', `${y}px`);
+        });
+      });
+
+      // 3. Scroll Fade-In Animation
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1 });
+
+      document.querySelectorAll('.scroll-anim').forEach(el => observer.observe(el));
+    </script>
   </body>
 </html>
