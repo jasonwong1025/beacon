@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/icon32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/icon16.png" />
+    <link rel="apple-touch-icon" sizes="128x128" href="icons/icon128.png" />
+    <link rel="stylesheet" href="site.css" />
+
+    <title>Beacon User Guide — Install, Focus Sessions & Website Rules</title>
+    <meta name="description" content="Step-by-step guide to install Beacon, start focus sessions, manage website blocking rules, read analytics reports, and export your local data." />
+    <meta name="keywords" content="Beacon user guide, Chrome extension install, focus session tutorial, website blocker setup, Pomodoro Chrome extension" />
+    <meta name="author" content="Jason Wong" />
+    <link rel="canonical" href="https://jasonwong1025.github.io/beacon/user-guide.html" />
+
+    <meta name="geo.region" content="Global" />
+    <meta name="geo.placename" content="World" />
+
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Beacon User Guide" />
+    <meta property="og:description" content="Install Beacon, run focus sessions, configure website rules, and understand your productivity reports." />
+    <meta property="og:url" content="https://jasonwong1025.github.io/beacon/user-guide.html" />
+    <meta property="og:image" content="https://jasonwong1025.github.io/beacon/screenshots/popup-session-setup.png" />
+    <meta property="og:site_name" content="Beacon Extension" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Beacon User Guide" />
+    <meta name="twitter:description" content="Install Beacon, run focus sessions, configure website rules, and understand your productivity reports." />
+    <meta name="twitter:image" content="https://jasonwong1025.github.io/beacon/screenshots/popup-session-setup.png" />
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Beacon User Guide",
+      "description": "Step-by-step guide to install Beacon, start focus sessions, manage website blocking rules, and read analytics reports.",
+      "url": "https://jasonwong1025.github.io/beacon/user-guide.html",
+      "author": { "@type": "Person", "name": "Jason Wong", "url": "https://jasonwong.top" },
+      "publisher": { "@type": "Organization", "name": "Beacon" },
+      "inLanguage": "en",
+      "isPartOf": { "@type": "WebSite", "name": "Beacon", "url": "https://jasonwong1025.github.io/beacon/" }
+    }
+    </script>
+  </head>
+  <body>
+    <div class="bg-grid"></div>
+
+    <header class="site-header">
+      <div class="site-header-inner">
+        <a class="brand" href="index.html">
+          <img src="icons/icon32.png" width="32" height="32" alt="Beacon" />
+          Beacon
+        </a>
+        <nav class="site-nav" aria-label="Main navigation">
+          <a href="index.html" data-nav="home">Home</a>
+          <a href="user-guide.html" data-nav="user-guide">User Guide</a>
+          <a href="architecture.html" data-nav="architecture">Architecture</a>
+          <a href="https://github.com/jasonwong1025/beacon" class="nav-external" target="_blank" rel="noopener noreferrer" data-nav="github">GitHub</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="page">
+      <p class="doc-meta">Documentation</p>
+      <h1 class="doc-title">User Guide</h1>
+      <p class="doc-lead">Everything you need to install Beacon, run your first focus session, tune website rules, and read your reports — all without leaving your browser.</p>
+
+      <article class="prose">
+        <h2>Install</h2>
+        <ol>
+          <li>Run <code>npm install && npm run build</code>.</li>
+          <li>Open <code>chrome://extensions</code>, enable <strong>Developer mode</strong>, click <strong>Load unpacked</strong>, and pick the <code>dist/</code> folder.</li>
+          <li>Pin Beacon to your toolbar.</li>
+        </ol>
+
+        <h2>Start a focus session</h2>
+        <ol>
+          <li>Click the Beacon icon.</li>
+          <li>Type what you're focusing on (e.g. <em>Build Flutter Portfolio App</em>).</li>
+          <li>Pick a session type and duration (or a custom one). Optionally turn on <strong>Pomodoro</strong>.</li>
+          <li>Click <strong>Start focus session</strong>. The toolbar badge shows minutes remaining.</li>
+        </ol>
+
+        <h3>While a session runs</h3>
+        <ul>
+          <li>Visiting a <strong>blocked</strong> site shows a calm "stay on course" page.</li>
+          <li>Visiting a <strong>warning</strong> site shows a quick check-in. Choose your intent and <strong>Continue anyway</strong>, or <strong>Return</strong>. Continuing keeps that site open for the rest of the session.</li>
+          <li><strong>Smart YouTube / Reddit</strong> keep tutorials, search, and subreddits open while warning on feeds and Shorts.</li>
+          <li>Pause, resume, or end the session from the popup.</li>
+        </ul>
+
+        <h2>Manage website rules</h2>
+        <p>Open the <strong>Dashboard → Website Rules</strong>. Add a host (e.g. <code>instagram.com</code>) to <strong>Blocked</strong>, <strong>Warning</strong>, or <strong>Allowed</strong>. A host belongs to one list at a time. Toggle the <strong>Smart Modes</strong> here too.</p>
+
+        <h2>See your data</h2>
+        <ul>
+          <li><strong>Overview</strong> — today's focus time, sessions, distraction events, focus ratio, website breakdown, and time allocation.</li>
+          <li><strong>Reports</strong> — daily / weekly / monthly summaries and a focus-by-day chart.</li>
+          <li><strong>Settings → Your Data</strong> — export to JSON or CSV, or clear everything.</li>
+        </ul>
+
+        <div class="callout">
+          <p><strong>Privacy:</strong> All data stays on your device. No account, no tracking, no cloud sync.</p>
+        </div>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <p>&copy; 2026 Beacon. Licensed under the MIT License.</p>
+      <p class="site-footer-links">
+        <a href="https://github.com/jasonwong1025/beacon">GitHub Repository</a>
+        <span aria-hidden="true">·</span>
+        <a href="https://github.com/jasonwong1025/beacon/blob/main/README.zh-CN.md">简体中文 README</a>
+        <span aria-hidden="true">·</span>
+        <a href="https://jasonwong.top" target="_blank" rel="noopener noreferrer">jasonwong.top</a>
+      </p>
+    </footer>
+
+    <script src="site.js" defer></script>
+  </body>
+</html>

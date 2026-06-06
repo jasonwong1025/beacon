@@ -207,7 +207,6 @@ beacon/
 | [**文档站点（GitHub Pages）**](https://jasonwong1025.github.io/beacon/) | 可搜索的项目主页 — 在 **Settings → Pages → `/docs`** 启用 |
 | [`docs/user-guide.md`](docs/user-guide.md) | 用户指南 — 会话、规则、报告（英文） |
 | [`docs/architecture.md`](docs/architecture.md) | 数据模型、Service Worker、导航流程（英文） |
-| [`docs/roadmap.md`](docs/roadmap.md) | v1.0 已发布 · v1.5 进行中 · v2.0 规划中（英文） |
 
 ### 建议的 GitHub 仓库标签
 

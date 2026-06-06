@@ -207,7 +207,6 @@ beacon/
 | [**docs site (GitHub Pages)**](https://jasonwong1025.github.io/beacon/) | Searchable project hub — enable via **Settings → Pages → `/docs`** |
 | [`docs/user-guide.md`](docs/user-guide.md) | End-user walkthrough — sessions, rules, reports |
 | [`docs/architecture.md`](docs/architecture.md) | Data model, service worker, navigation flow |
-| [`docs/roadmap.md`](docs/roadmap.md) | v1.0 shipped · v1.5 in progress · v2.0 planned |
 
 ### Suggested GitHub repository topics
 

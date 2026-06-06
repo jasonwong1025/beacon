@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/icon32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/icon16.png" />
+    <link rel="apple-touch-icon" sizes="128x128" href="icons/icon128.png" />
+    <link rel="stylesheet" href="site.css" />
+
+    <title>Beacon Architecture — MV3 Service Worker, Data Model & Navigation Flow</title>
+    <meta name="description" content="Technical architecture of Beacon: Manifest V3 service worker, chrome.storage data model, declarativeNetRequest blocking, navigation guard, analytics pipeline, and session engine." />
+    <meta name="keywords" content="Beacon architecture, Chrome extension MV3, service worker, declarativeNetRequest, chrome.storage, focus session engine" />
+    <meta name="author" content="Jason Wong" />
+    <link rel="canonical" href="https://jasonwong1025.github.io/beacon/architecture.html" />
+
+    <meta name="geo.region" content="Global" />
+    <meta name="geo.placename" content="World" />
+
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Beacon Architecture" />
+    <meta property="og:description" content="Deep dive into Beacon's MV3 service worker, data model, navigation interception, and analytics pipeline." />
+    <meta property="og:url" content="https://jasonwong1025.github.io/beacon/architecture.html" />
+    <meta property="og:image" content="https://jasonwong1025.github.io/beacon/screenshots/website-rules.png" />
+    <meta property="og:site_name" content="Beacon Extension" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Beacon Architecture" />
+    <meta name="twitter:description" content="Deep dive into Beacon's MV3 service worker, data model, navigation interception, and analytics pipeline." />
+    <meta name="twitter:image" content="https://jasonwong1025.github.io/beacon/screenshots/website-rules.png" />
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Beacon Architecture",
+      "description": "Technical architecture of Beacon: Manifest V3 service worker, data model, navigation guard, and analytics.",
+      "url": "https://jasonwong1025.github.io/beacon/architecture.html",
+      "author": { "@type": "Person", "name": "Jason Wong", "url": "https://jasonwong.top" },
+      "publisher": { "@type": "Organization", "name": "Beacon" },
+      "inLanguage": "en",
+      "isPartOf": { "@type": "WebSite", "name": "Beacon", "url": "https://jasonwong1025.github.io/beacon/" }
+    }
+    </script>
+  </head>
+  <body>
+    <div class="bg-grid"></div>
+
+    <header class="site-header">
+      <div class="site-header-inner">
+        <a class="brand" href="index.html">
+          <img src="icons/icon32.png" width="32" height="32" alt="Beacon" />
+          Beacon
+        </a>
+        <nav class="site-nav" aria-label="Main navigation">
+          <a href="index.html" data-nav="home">Home</a>
+          <a href="user-guide.html" data-nav="user-guide">User Guide</a>
+          <a href="architecture.html" data-nav="architecture">Architecture</a>
+          <a href="https://github.com/jasonwong1025/beacon" class="nav-external" target="_blank" rel="noopener noreferrer" data-nav="github">GitHub</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="page">
+      <p class="doc-meta">Documentation</p>
+      <h1 class="doc-title">Architecture</h1>
+      <p class="doc-lead">Beacon is a Manifest V3 Chrome extension. Logic is split into framework-agnostic modules, a service worker, and three React surfaces (popup, dashboard, intervention pages).</p>
+
+      <article class="prose">
+        <h2>Data model</h2>
+        <p>All durable state lives in <code>chrome.storage.local</code> behind the typed wrapper in <code>src/modules/storage</code>:</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Key</th>
+              <th>Shape</th>
+              <th>Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>beacon.settings</code></td>
+              <td><code>Settings</code></td>
+              <td>Pomodoro, smart modes, intervention prefs</td>
+            </tr>
+            <tr>
+              <td><code>beacon.rules</code></td>
+              <td><code>WebsiteRule[]</code></td>
+              <td>Per-host block / warning / allowed rules</td>
+            </tr>
+            <tr>
+              <td><code>beacon.currentSession</code></td>
+              <td><code>FocusSession | null</code></td>
+              <td>The in-flight focus session</td>
+            </tr>
+            <tr>
+              <td><code>beacon.events</code></td>
+              <td><code>BeaconEvent[]</code></td>
+              <td>Raw event log (visits, blocks, warns, switches…)</td>
+            </tr>
+            <tr>
+              <td><code>beacon.history</code></td>
+              <td><code>SessionRecord[]</code></td>
+              <td>Completed/cancelled sessions for reports</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>Transient state lives in <code>chrome.storage.session</code> (<code>src/background/transient.ts</code>): the active tab/clock, per-tab "continue" grants, and the last-nudge timestamp. It survives service-worker suspension but resets when the browser restarts.</p>
+
+        <h2>Service worker</h2>
+        <p>Located in <code>src/background</code>:</p>
+        <ul>
+          <li><strong>index.ts</strong> — wires all Chrome event listeners and the message router.</li>
+          <li><strong>guard.ts</strong> — classifies main-frame navigations during a session and redirects the tab to the blocked or warn page when needed.</li>
+          <li><strong>dnr.ts</strong> — syncs <code>declarativeNetRequest</code> rules for hard blocks at the network layer.</li>
+          <li><strong>tracker.ts</strong> — banks time-on-domain into <code>visit</code> events, records tab switches, and fires throttled drift nudges.</li>
+          <li><strong>sessionController.ts</strong> — session lifecycle, Pomodoro phase transitions, toolbar badge, and end-of-session reports.</li>
+          <li><strong>transient.ts, notify.ts, pages.ts</strong> — helpers.</li>
+        </ul>
+
+        <p>Timers use <code>chrome.alarms</code>:</p>
+        <ul>
+          <li><code>beacon-phase</code> — a one-shot alarm at the current phase's end time.</li>
+          <li><code>beacon-track</code> — a 1-minute periodic alarm that banks time and refreshes the badge.</li>
+        </ul>
+
+        <h2>Navigation interception flow</h2>
+        <pre><code>onBeforeNavigate / onHistoryStateUpdated (main frame)
+        │
+        ▼
+ session active? ──no──▶ allow
+        │yes
+        ▼
+ classify(url, rules, smart)
+   ├─ allow ─────────────────▶ allow
+   ├─ block ─▶ record 'blocked' ─▶ redirect to blocked.html
+   └─ warn  ─▶ has grant? ─yes─▶ allow
+                  └─no─▶ record 'warned' ─▶ redirect to warn.html
+                                              ├─ Continue ▶ grant + navigate
+                                              └─ Return   ▶ history.back()</code></pre>
+
+        <p>HTTP navigations to blocked domains are handled by <code>declarativeNetRequest</code> before the page loads. SPA navigations and warning pages are handled by the guard. Redirects target extension pages (<code>chrome-extension://…</code>), which are exempt from the guard, so there are no redirect loops.</p>
+
+        <h2>Analytics</h2>
+        <p>Raw <code>events</code> + <code>history</code> are aggregated on demand in <code>src/modules/analytics</code>:</p>
+        <ul>
+          <li><strong>buildDayOverview</strong> — one day's focus/distraction/neutral seconds, focus ratio, domain breakdown, and counts.</li>
+          <li><strong>buildRangeReport</strong> — rolls up N days with a per-day series, top productive/distracting sites, average session length, and the most productive day.</li>
+          <li><strong>detectTabThrash / detectRepeatDistraction</strong> — live signals that power drift nudges.</li>
+          <li><strong>exportJSON / exportCSV</strong> — user-initiated data export.</li>
+        </ul>
+        <p>Domains are categorized as <strong>productive</strong> (matches an <code>allowed</code> rule), <strong>distracting</strong> (matches a <code>blocked</code>/<code>warning</code> rule), or <strong>neutral</strong>.</p>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <p>&copy; 2026 Beacon. Licensed under the MIT License.</p>
+      <p class="site-footer-links">
+        <a href="https://github.com/jasonwong1025/beacon">GitHub Repository</a>
+        <span aria-hidden="true">·</span>
+        <a href="https://github.com/jasonwong1025/beacon/blob/main/README.zh-CN.md">简体中文 README</a>
+        <span aria-hidden="true">·</span>
+        <a href="https://jasonwong.top" target="_blank" rel="noopener noreferrer">jasonwong.top</a>
+      </p>
+    </footer>
+
+    <script src="site.js" defer></script>
+  </body>
+</html>

@@ -6,6 +6,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="icons/icon32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="icons/icon16.png" />
     <link rel="apple-touch-icon" sizes="128x128" href="icons/icon128.png" />
+    <link rel="stylesheet" href="site.css" />
     
     <!-- Core SEO -->
     <title>Beacon — Intentional Browsing & Focus Sessions Chrome Extension</title>
@@ -106,9 +107,9 @@
       a:hover { color: var(--accent-hover); }
 
       .container {
-        max-width: 1100px;
+        max-width: var(--content-width, 1100px);
         margin: 0 auto;
-        padding: 5rem 1.5rem;
+        padding: 3rem 1.5rem 2rem;
         position: relative;
         z-index: 1;
       }
@@ -476,17 +477,6 @@
         z-index: -1;
       }
 
-      /* Footer */
-      footer {
-        margin-top: 7rem;
-        padding: 3rem 0;
-        border-top: 1px solid var(--card-border);
-        text-align: center;
-        color: var(--text-muted);
-        font-size: 1rem;
-      }
-      footer a { margin: 0 0.75rem; font-weight: 500; }
-
       /* Custom Cursor */
       @media (pointer: fine) {
         body, a, button, .interactive-card {
@@ -543,6 +533,21 @@
     <!-- Background Elements -->
     <div class="bg-grid"></div>
     <div id="mouse-glow"></div>
+
+    <header class="site-header">
+      <div class="site-header-inner">
+        <a class="brand" href="index.html">
+          <img src="icons/icon32.png" width="32" height="32" alt="Beacon" />
+          Beacon
+        </a>
+        <nav class="site-nav" aria-label="Main navigation">
+          <a href="index.html" data-nav="home">Home</a>
+          <a href="user-guide.html" data-nav="user-guide">User Guide</a>
+          <a href="architecture.html" data-nav="architecture">Architecture</a>
+          <a href="https://github.com/jasonwong1025/beacon" class="nav-external" target="_blank" rel="noopener noreferrer" data-nav="github">GitHub</a>
+        </nav>
+      </div>
+    </header>
     
     <main class="container">
       <header class="hero">
@@ -663,17 +668,13 @@
       <section class="scroll-anim" aria-labelledby="docs-heading">
         <h2 id="docs-heading">Documentation Hub</h2>
         <div class="grid grid-2">
-          <a href="user-guide.md" class="card interactive-card" style="display: block;">
+          <a href="user-guide.html" class="card interactive-card" style="display: block;">
             <h3>📖 User Guide</h3>
             <p>Learn how to install Beacon, start focus sessions, manage rules, and understand your reports.</p>
           </a>
-          <a href="architecture.md" class="card interactive-card" style="display: block;">
+          <a href="architecture.html" class="card interactive-card" style="display: block;">
             <h3>⚙️ Architecture</h3>
             <p>Deep dive into the Service Worker, MV3 declarativeNetRequest blocking, data model, and navigation flow.</p>
-          </a>
-          <a href="roadmap.md" class="card interactive-card" style="display: block;">
-            <h3>🗺️ Roadmap</h3>
-            <p>See the shipped features for v1.0 and what's coming in v1.5 and v2.0.</p>
           </a>
           <a href="https://github.com/jasonwong1025/beacon/blob/main/README.md" class="card interactive-card" style="display: block;">
             <h3>💻 Developer README</h3>
@@ -682,15 +683,18 @@
         </div>
       </section>
 
-      <footer>
-        <p>&copy; 2026 Beacon. Licensed under the MIT License.</p>
-        <p style="margin-top: 1rem;">
-          <a href="https://github.com/jasonwong1025/beacon">GitHub Repository</a> |
-          <a href="https://github.com/jasonwong1025/beacon/blob/main/README.zh-CN.md">简体中文 README</a> |
-          <a href="https://jasonwong.top" target="_blank" rel="noopener noreferrer">jasonwong.top</a>
-        </p>
-      </footer>
     </main>
+
+    <footer class="site-footer">
+      <p>&copy; 2026 Beacon. Licensed under the MIT License.</p>
+      <p class="site-footer-links">
+        <a href="https://github.com/jasonwong1025/beacon">GitHub Repository</a>
+        <span aria-hidden="true">·</span>
+        <a href="https://github.com/jasonwong1025/beacon/blob/main/README.zh-CN.md">简体中文 README</a>
+        <span aria-hidden="true">·</span>
+        <a href="https://jasonwong.top" target="_blank" rel="noopener noreferrer">jasonwong.top</a>
+      </p>
+    </footer>
 
     <!-- Interactive Scripts -->
     <script>
@@ -788,5 +792,6 @@
 
       document.querySelectorAll('.scroll-anim').forEach(el => observer.observe(el));
     </script>
+    <script src="site.js" defer></script>
   </body>
 </html>
