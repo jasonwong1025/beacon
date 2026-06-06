@@ -239,12 +239,15 @@
       /* Sections & Grid */
       section {
         margin-top: 6rem;
+      }
+      
+      .scroll-anim {
         opacity: 0;
         transform: translateY(30px);
         transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
       }
       
-      section.visible {
+      .scroll-anim.visible {
         opacity: 1;
         transform: translateY(0);
       }
@@ -371,6 +374,87 @@
       }
       ul.feature-list strong { color: var(--text-main); display: block; margin-bottom: 0.25rem; }
 
+      /* Editorial Features Layout */
+      .editorial-features {
+        display: flex;
+        flex-direction: column;
+        gap: 8rem;
+        margin-top: 4rem;
+      }
+      .feature-row {
+        display: flex;
+        flex-direction: column;
+        gap: 3rem;
+        align-items: center;
+      }
+      @media (min-width: 800px) {
+        .feature-row {
+          flex-direction: row;
+          gap: 6rem;
+        }
+        .feature-row:nth-child(even) {
+          flex-direction: row-reverse;
+        }
+        .feature-row > * {
+          flex: 1;
+        }
+      }
+      .feature-content h3 {
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin-bottom: 1.25rem;
+        letter-spacing: -0.02em;
+        color: #ffffff;
+      }
+      .feature-content p {
+        font-size: 1.15rem;
+        color: var(--text-muted);
+        line-height: 1.8;
+        margin-bottom: 1.5rem;
+      }
+      .feature-visual {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        aspect-ratio: 1 / 1;
+        width: 100%;
+        max-width: 450px;
+        background: radial-gradient(circle at top left, rgba(255,255,255,0.04), transparent);
+        border-radius: 3rem;
+        position: relative;
+        overflow: hidden;
+      }
+      .feature-visual::before {
+        content: '';
+        position: absolute;
+        inset: 1px;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+      }
+      .feature-visual .visual-icon {
+        width: 120px;
+        height: 120px;
+        color: var(--accent-hover);
+        filter: drop-shadow(0 10px 20px rgba(51, 128, 252, 0.3));
+        transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .feature-row:hover .visual-icon {
+        transform: scale(1.08) translateY(-10px);
+      }
+      .visual-glow {
+        position: absolute;
+        width: 200px;
+        height: 200px;
+        background: var(--accent-solid);
+        filter: blur(80px);
+        opacity: 0.15;
+        z-index: -1;
+      }
+
       /* Footer */
       footer {
         margin-top: 7rem;
@@ -496,31 +580,64 @@
         </div>
       </section>
 
-      <section class="scroll-anim" aria-labelledby="features-heading">
-        <h2 id="features-heading">Core Features</h2>
-        <div class="card interactive-card" style="padding: 2.5rem;">
-          <ul class="feature-list">
-            <li>
-              <strong>Focus Sessions</strong>
-              Define a goal, choose a timer preset, use Pomodoro, and apply profile-based site lists.
-            </li>
-            <li>
-              <strong>Intelligent Blocking</strong>
-              Blocked (hard stop via <code>declarativeNetRequest</code>), Warning (intent check page), Allowed (no interruption).
-            </li>
-            <li>
-              <strong>Smart Modes</strong>
-              Allow YouTube <code>/watch</code> but warn on feeds &amp; Shorts; allow specific Subreddits but warn on the popular feed.
-            </li>
-            <li>
-              <strong>Local Analytics</strong>
-              Dashboard tracks focus ratio, distraction events, and daily/weekly/monthly reports.
-            </li>
-            <li>
-              <strong>100% Privacy</strong>
-              All your data is stored locally using <code>chrome.storage</code>. Export your JSON or CSV anytime. No tracking.
-            </li>
-          </ul>
+      <section aria-labelledby="features-heading" style="margin-top: 10rem;">
+        <h2 id="features-heading" class="scroll-anim" style="font-size: 2.5rem; margin-bottom: 2rem; text-align: center; background: linear-gradient(to right, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Core Features</h2>
+        <div class="editorial-features">
+          
+          <div class="feature-row scroll-anim">
+            <div class="feature-content">
+              <h3 style="color: #93c5fd;">The Focus Engine</h3>
+              <p>Forget rigid timers. Beacon lets you define exactly what you want to achieve, pick a profile tailored for the task (like <em>Deep Work</em> or <em>Casual Study</em>), and seamlessly layer Pomodoro intervals on top. It’s an engine designed to pull you into a flow state, rather than just counting down minutes on a screen.</p>
+            </div>
+            <div class="feature-visual">
+              <div class="visual-glow"></div>
+              <svg class="visual-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </div>
+          </div>
+
+          <div class="feature-row scroll-anim">
+            <div class="feature-content">
+              <h3 style="color: #fca5a5;">Smart Interventions</h3>
+              <p>We believe in intent, not imprisonment. When you drift toward a distraction, Beacon pauses you with a gentle warning page—giving you a moment to breathe and reconsider. If you absolutely need a hard stop, our native MV3 integration cuts network access instantly.</p>
+            </div>
+            <div class="feature-visual">
+              <div class="visual-glow" style="background: #ef4444;"></div>
+              <svg class="visual-icon" style="color: #fca5a5;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+            </div>
+          </div>
+
+          <div class="feature-row scroll-anim">
+            <div class="feature-content">
+              <h3 style="color: #a7f3d0;">Context-Aware Modes</h3>
+              <p>The modern web isn't black and white. Beacon understands context. Need to watch a React tutorial on YouTube? No problem. But if you try to open YouTube Shorts or the homepage feed, Beacon steps in. Allow specific Subreddits while blocking the doom-scroll.</p>
+            </div>
+            <div class="feature-visual">
+              <div class="visual-glow" style="background: #10b981;"></div>
+              <svg class="visual-icon" style="color: #6ee7b7;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12h4l3-9 5 18 3-9h5"></path>
+              </svg>
+            </div>
+          </div>
+
+          <div class="feature-row scroll-anim">
+            <div class="feature-content">
+              <h3 style="color: #c4b5fd;">Your Data, Your Machine</h3>
+              <p>Privacy isn't a feature; it's the foundation. There are no accounts to create, no servers syncing your habits, and absolutely no telemetry. Everything Beacon learns about your focus patterns stays encrypted locally on your browser. Export it yourself anytime.</p>
+            </div>
+            <div class="feature-visual">
+              <div class="visual-glow" style="background: #8b5cf6;"></div>
+              <svg class="visual-icon" style="color: #c4b5fd;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </div>
+          </div>
+
         </div>
       </section>
 
