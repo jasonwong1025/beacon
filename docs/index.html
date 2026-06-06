@@ -3,6 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/icon32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/icon16.png" />
+    <link rel="apple-touch-icon" sizes="128x128" href="icons/icon128.png" />
     
     <!-- Core SEO -->
     <title>Beacon — Intentional Browsing & Focus Sessions Chrome Extension</title>
@@ -148,6 +151,24 @@
         max-width: 700px;
         margin: 0 auto 3rem;
         line-height: 1.8;
+      }
+
+      .hero-logo {
+        display: inline-block;
+        margin-bottom: 2rem;
+        border-radius: 1.25rem;
+        box-shadow: 0 0 40px rgba(51, 128, 252, 0.25);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+      .hero-logo:hover {
+        transform: translateY(-4px) scale(1.03);
+        box-shadow: 0 12px 48px rgba(51, 128, 252, 0.35);
+      }
+      .hero-logo img {
+        display: block;
+        width: 72px;
+        height: 72px;
+        border-radius: 1.25rem;
       }
 
       /* Badges */
@@ -525,13 +546,8 @@
     
     <main class="container">
       <header class="hero">
-        <div style="display: inline-block; padding: 1rem; border-radius: 2rem; background: rgba(51,128,252,0.1); border: 1px solid rgba(51,128,252,0.2); margin-bottom: 2rem; box-shadow: 0 0 40px rgba(51,128,252,0.2);">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="12" cy="12" r="10" stroke="#3380fc" strokeWidth="1.6" opacity="0.4" />
-            <circle cx="12" cy="12" r="5.5" stroke="#59a4ff" strokeWidth="1.6" />
-            <circle cx="12" cy="12" r="2" fill="#59a4ff" />
-            <path d="M12 1.5V4M12 20v2.5M1.5 12H4M20 12h2.5" stroke="#3380fc" strokeWidth="1.6" strokeLinecap="round" />
-          </svg>
+        <div class="hero-logo">
+          <img src="icons/icon128.png" width="128" height="128" alt="Beacon logo" />
         </div>
         <h1>Beacon</h1>
         <p class="tagline">Stay on course. Work with intention.</p>
@@ -557,7 +573,13 @@
           <a class="btn btn-secondary" href="https://github.com/jasonwong1025/beacon#-getting-started">
             Install Locally
           </a>
+          <a class="btn btn-secondary" href="https://jasonwong.top" target="_blank" rel="noopener noreferrer">
+            jasonwong.top
+          </a>
         </div>
+        <p style="margin-top: 2rem; font-size: 0.95rem; color: var(--text-muted);">
+          Built by <a href="https://jasonwong.top" target="_blank" rel="noopener noreferrer">Jason Wong</a>
+        </p>
       </header>
 
       <section class="scroll-anim" aria-labelledby="screenshots-heading">
@@ -666,8 +688,9 @@
       <footer>
         <p>&copy; 2026 Beacon. Licensed under the MIT License.</p>
         <p style="margin-top: 1rem;">
-          <a href="https://github.com/jasonwong1025/beacon">GitHub Repository</a> | 
-          <a href="../README.zh-CN.md">简体中文 README</a>
+          <a href="https://github.com/jasonwong1025/beacon">GitHub Repository</a> |
+          <a href="https://github.com/jasonwong1025/beacon/blob/main/README.zh-CN.md">简体中文 README</a> |
+          <a href="https://jasonwong.top" target="_blank" rel="noopener noreferrer">jasonwong.top</a>
         </p>
       </footer>
     </main>

@@ -6,7 +6,9 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'public', 'icons');
+const DOCS_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'docs', 'icons');
 mkdirSync(OUT_DIR, { recursive: true });
+mkdirSync(DOCS_DIR, { recursive: true });
 
 // ---- tiny PNG encoder (RGBA, 8-bit) ----
 const CRC_TABLE = (() => {
@@ -151,6 +153,8 @@ function draw(size) {
 
 for (const size of [16, 32, 48, 128]) {
   const png = draw(size);
-  writeFileSync(join(OUT_DIR, `icon${size}.png`), png);
+  for (const dir of [OUT_DIR, DOCS_DIR]) {
+    writeFileSync(join(dir, `icon${size}.png`), png);
+  }
   console.log(`wrote icon${size}.png (${png.length} bytes)`);
 }
